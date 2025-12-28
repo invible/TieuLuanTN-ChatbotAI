@@ -1,0 +1,46 @@
+.dashboard-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* stat cards */
+.stats-row .ant-card {
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+    color: #fff;
+}
+
+.stat-card .ant-statistic-title {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-card .ant-statistic-content {
+    color: #fff;
+    font-size: 22px;
+}
+
+.stat-footer {
+    margin-top: 12px;
+}
+
+.stat-card-green {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.stat-card-purple {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+}
+
+.stat-card-blue {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.stat-card-orange {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+}
+
+/* card chung */
+.ant-card {
+    border-radius: 8px;
+}
