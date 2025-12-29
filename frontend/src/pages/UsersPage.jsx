@@ -1,4 +1,3 @@
-// src/pages/UsersPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import {
   Card,
@@ -96,7 +95,7 @@ const UsersPage = () => {
           fetchUsers();
         } catch (error) {
           console.error("Lỗi xoá người dùng:", error);
-          message.error("Không xoá được người dùng");
+          message.error("Xóa thất bại");
         }
       },
     });
@@ -239,8 +238,14 @@ const UsersPage = () => {
 
   return (
     <>
+        <div className="dashboard-page">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Người dùng</h1>
+        <p className="dashboard-subtitle">Quản lý người dùng</p>
+      </div>
       <Card
-        title="Quản lý người dùng"
+        className="dashboard-card"
+        title="Danh sách người dùng"
         extra={
           <Space>
             <Search
@@ -379,6 +384,7 @@ const UsersPage = () => {
           </Form.Item>
         </Form>
       </Modal>
+      </div>
     </>
   );
 };

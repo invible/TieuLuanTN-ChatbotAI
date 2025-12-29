@@ -43,7 +43,7 @@ const ReceiptsPage = () => {
       const res = await listReceipts();
       setReceipts(res.data || []);
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi tải phiếu nhập:", err);
       message.error("Không tải được danh sách phiếu nhập");
     } finally {
       setLoading(false);
@@ -195,20 +195,20 @@ const ReceiptsPage = () => {
   const handleSubmit = async (values) => {
     const payload = {
       create_date: values.create_date
-        ? values.create_date.format("YYYY-MM-DD HH:mm:ss")
+        ? values.create_date.toISOString()
         : null,
       approval_date: values.approval_date
-        ? values.approval_date.format("YYYY-MM-DD HH:mm:ss")
+        ? values.approval_date.toISOString()
         : null,
       approval_person: values.approval_person || null,
       note: values.note || null,
       status: values.status || "completed",
-      supplier_id: values.supplier_id,
-      user_id: values.user_id || 1,
+      supplier_id: Number(values.supplier_id),
+      user_id: Number(values.user_id || 1),
       items: (values.items || []).map((it) => ({
-        product_id: it.product_id,
-        quantity: it.quantity,
-        unit_price: it.unit_price,
+        product_id: Number(it.product_id),
+        quantity: Number(it.quantity),
+        unit_price: Number(it.unit_price),
       })),
     };
 
@@ -224,9 +224,9 @@ const ReceiptsPage = () => {
       setModalOpen(false);
       setEditingReceipt(null);
       form.resetFields();
-      fetchReceipts();
+      await fetchReceipts();
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi submit:", err);
       message.error("Lưu phiếu nhập thất bại");
     }
   };
@@ -303,7 +303,7 @@ const ReceiptsPage = () => {
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
-        <h1 className="dashboard-title">Receipts</h1>
+        <h1 className="dashboard-title">Nhập kho</h1>
         <p className="dashboard-subtitle">Quản lý phiếu nhập kho</p>
       </div>
 
@@ -394,12 +394,12 @@ const ReceiptsPage = () => {
           </div>
 
           <div className="dashboard-row" style={{ marginBottom: 16 }}>
-            <div>
+            {/* <div>
               <Form.Item label="Người duyệt" name="approval_person">
                 <Input placeholder="Tên người duyệt (nếu có)" />
               </Form.Item>
-            </div>
-            <div>
+            </div> */}
+            {/* <div>
               <Form.Item label="Ngày duyệt" name="approval_date">
                 <DatePicker
                   showTime
@@ -407,7 +407,7 @@ const ReceiptsPage = () => {
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-            </div>
+            </div> */}
           </div>
 
           <Form.Item label="Ghi chú" name="note">

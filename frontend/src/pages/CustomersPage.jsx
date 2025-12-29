@@ -1,5 +1,4 @@
-// src/pages/CustomersPage.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -12,6 +11,11 @@ import {
   Select,
   message,
 } from "antd";
+import {
+  PlusOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+
 import dayjs from "dayjs";
 import {
   listCustomers,
@@ -21,9 +25,12 @@ import {
   deleteCustomer,
 } from "../services/customerApi";
 
+const { Search } = Input;
+
 const CustomersPage = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form] = Form.useForm();
@@ -34,7 +41,7 @@ const CustomersPage = () => {
       const res = await listCustomers();
       setCustomers(res.data || []);
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi tải khách hàng:",err);
       message.error("Không tải được khách hàng");
     } finally {
       setLoading(false);
@@ -78,7 +85,7 @@ const CustomersPage = () => {
           message.success("Đã xoá");
           fetchCustomers();
         } catch (err) {
-          console.error(err);
+          console.error("Lỗi xoá khách hàng:", err);
           message.error("Xoá thất bại");
         }
       },
@@ -111,7 +118,7 @@ const CustomersPage = () => {
       fetchCustomers();
     } catch (err) {
       if (err?.errorFields) return; // lỗi validate của antd
-      console.error(err);
+      console.error("Lỗi lưu khách hàng:", err);
       message.error("Lưu khách hàng thất bại");
     }
   };
@@ -183,10 +190,24 @@ const CustomersPage = () => {
     },
   ];
 
+    const filteredCustomers = useMemo(() => {
+      if (!searchText) return customers;
+      const text = searchText.toLowerCase();
+      return customers.filter((u) => {
+        return (
+          String(u.id).includes(text) ||
+          u.name?.toLowerCase().includes(text) ||
+          u.address?.toLowerCase().includes(text) ||
+          u.phone?.toLowerCase().includes(text)
+        );
+      });
+    }, [customers, searchText]);
+  
+
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
-        <h1 className="dashboard-title">Customers</h1>
+        <h1 className="dashboard-title">Khách hàng</h1>
         <p className="dashboard-subtitle">Quản lý khách hàng</p>
       </div>
 
@@ -194,16 +215,30 @@ const CustomersPage = () => {
         className="dashboard-card"
         title="Danh sách khách hàng"
         extra={
-          <Button type="primary" onClick={openCreate}>
-            + Thêm khách hàng
-          </Button>
+          <Space>
+            <Search
+              placeholder="Tìm theo tên, địa chỉ, SĐT..."
+              allowClear
+              onSearch={(v) => setSearchText(v)}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ width: 320 }}
+              prefix={<SearchOutlined />}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={openCreate}
+            >
+              Thêm khách hàng
+            </Button>
+          </Space>
         }
       >
         <Table
           rowKey="id"
           loading={loading}
           columns={columns}
-          dataSource={customers}
+          dataSource={filteredCustomers}
           pagination={{ pageSize: 10, showSizeChanger: true }}
         />
       </Card>
@@ -219,7 +254,15 @@ const CustomersPage = () => {
         okText="Lưu"
         destroyOnClose
       >
-        <Form layout="vertical" form={form} preserve={false}>
+        <Form 
+        layout="vertical" 
+        form={form} 
+        preserve={false}
+        initialValues={editing ? {
+      ...editing,
+      date_of_birth: editing.date_of_birth ? dayjs(editing.date_of_birth) : null
+    } : {}}
+        >
           <Form.Item
             label="Họ tên"
             name="name"

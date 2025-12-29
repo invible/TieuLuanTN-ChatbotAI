@@ -10,15 +10,10 @@ import {
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  DashboardOutlined,
-  ProductOutlined,
-  TableOutlined,
-  FormOutlined,
   GiftOutlined,
   BellOutlined,
   UserOutlined,
   SearchOutlined,
-  FileTextOutlined
 } from '@ant-design/icons';
 
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
@@ -35,6 +30,11 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 
 import ChatWidget from "./components/chat/ChatbotWidget";
+
+import { MENU_ITEMS } from './config/menu.config';
+import { getOpenKeysFromPath } from './utils/menu.helper';
+
+const openKeys = getOpenKeysFromPath(location.pathname);
   
 import './App.css';
 
@@ -44,17 +44,6 @@ const App = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-
-  const menuItems = [
-    { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
-    { key: '/products', icon: <ProductOutlined />, label: 'Products' },
-    { key: '/categories', icon: <TableOutlined />, label: 'Categories' },
-    { key: '/brands', icon: <TableOutlined />, label: 'Brands' },
-    { key: '/receipts', icon: <FileTextOutlined  />, label: 'Receipts' },
-    { key: '/orders', icon: <FormOutlined />, label: 'Orders' },
-    { key: '/users', icon: <UserOutlined />, label: 'Users' },
-    { key: '/customers', icon: <UserOutlined />, label: 'Customers' },
-  ];
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -67,15 +56,18 @@ const App = () => {
       >
         <div className="logo">
           <div className="logo-icon">E</div>
-          {!collapsed && <span className="logo-text">E-ShopAdmin</span>}
+          {!collapsed && <span className="logo-text">HY-ShopAdmin</span>}
         </div>
 
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
-          items={menuItems}
-          onClick={(info) => navigate(info.key)}
+          defaultOpenKeys={openKeys}
+          items={MENU_ITEMS}
+          onClick={({ key }) => {
+            if (key.startsWith('/')) navigate(key);
+          }}
         />
       </Sider>
 
@@ -92,22 +84,13 @@ const App = () => {
           </div>
 
           <div className="header-right">
-            <Input
-              className="header-search"
-              prefix={<SearchOutlined />}
-              placeholder="Search..."
-              size="small"
-            />
 
             <Badge count={3} offset={[-2, 4]}>
               <BellOutlined className="header-icon" />
             </Badge>
-            <Badge count={1} offset={[-2, 4]}>
-              <GiftOutlined className="header-icon" />
-            </Badge>
 
             <Dropdown
-              menu={{ items: menuItems }}
+              menu={{ items: MENU_ITEMS }}
               placement="bottomRight"
             >
               <div className="header-user">

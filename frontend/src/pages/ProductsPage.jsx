@@ -21,6 +21,7 @@ import {
   DeleteOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
+import dayjs from "dayjs";
 import {
   listProducts,
   createProduct,
@@ -194,21 +195,16 @@ const ProductsPage = () => {
   };
 
   const handleSubmit = async (values) => {
+    // 1. Chuẩn bị payload với kiểu dữ liệu sạch
     const payload = {
-      name: values.name,
-      description: values.description,
-      unit: values.unit,
-      packaging: values.packaging,
-      // tạm thời dùng image_url (ảnh đầu tiên / base64) – backend có thể tuỳ chỉnh để lưu file thật
-      image_url: values.image_url,
-      purchase_price: Number(values.purchase_price),
-      selling_price: Number(values.selling_price),
-      stock: Number(values.stock ?? 0),
-      category_id: values.category_id ? Number(values.category_id) : null,
-      brand_id: values.brand_id ? Number(values.brand_id) : null,
+      ...values,
+      // Đảm bảo nếu không nhập (hoặc bị disabled) thì gửi về 0 thay vì null
+      purchase_price: values.purchase_price || 0, 
+      stock: values.stock || 0,
+      selling_price: values.selling_price || 0,
     };
-
     try {
+      setLoading(true); // Nếu bạn có state loading cho button
       if (editingProduct) {
         await updateProduct(editingProduct.id, payload);
         message.success("Cập nhật sản phẩm thành công");
@@ -216,14 +212,19 @@ const ProductsPage = () => {
         await createProduct(payload);
         message.success("Thêm sản phẩm thành công");
       }
+
       setIsModalOpen(false);
       setEditingProduct(null);
       form.resetFields();
-      setImageFileList([]);
       fetchProducts();
-    } catch (error) {
-      console.error("Lỗi lưu sản phẩm:", error);
-      message.error("Không lưu được sản phẩm");
+    } catch (err) {
+      console.error("Submit Error:", err);
+      // Hiển thị chi tiết lỗi từ server nếu có
+      const errorMsg = err.response?.data?.detail?.[0]?.msg || "Lưu phiếu nhập thất bại";
+      const errorLoc = err.response?.data?.detail?.[0]?.loc?.join(" -> ") || "";
+      message.error(`${errorMsg} (${errorLoc})`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -310,20 +311,19 @@ const ProductsPage = () => {
       width: 100,
     },
     {
-      title: "Giá nhập (VND)",
+      title: "Giá nhập",
       dataIndex: "purchase_price",
       key: "purchase_price",
       align: "right",
-      render: (value) => `${Number(value).toLocaleString()}`,
-      sorter: (a, b) =>
-        Number(a.purchase_price) - Number(b.purchase_price),
+      render: (value) => value?.toLocaleString("vi-VN") + " đ",
+      sorter: (a, b) => a.purchase_price - b.purchase_price,
     },
     {
-      title: "Giá bán (VND)",
+      title: "Giá bán",
       dataIndex: "selling_price",
       key: "selling_price",
       align: "right",
-      render: (value) => `${Number(value).toLocaleString()}`,
+      render: (value) => value?.toLocaleString("vi-VN") + " đ",
       sorter: (a, b) =>
         Number(a.selling_price) - Number(b.selling_price),
     },
@@ -332,15 +332,12 @@ const ProductsPage = () => {
       dataIndex: "stock",
       key: "stock",
       align: "center",
-      render: (value) =>
-        value > 10 ? (
-          <Tag color="green">{value}</Tag>
-        ) : value > 0 ? (
-          <Tag color="orange">{value}</Tag>
-        ) : (
-          <Tag color="red">Hết hàng</Tag>
-        ),
-      sorter: (a, b) => a.stock - b.stock,
+      render: (stock) => (
+            <Tag color={stock > 10 ? "blue" : "red"}>
+              {stock}
+            </Tag>
+          ),
+          sorter: (a, b) => a.stock - b.stock,
     },
 
     {
@@ -371,12 +368,17 @@ const ProductsPage = () => {
   ];
 
   return (
+      <div className="dashboard-page">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Sản phẩm</h1>
+        <p className="dashboard-subtitle">Quản lý sản phẩm</p>
+      </div>
     <Card
-      title="Quản lý sản phẩm"
+      title="Danh sách sản phẩm"
       extra={
         <Space>
           <Search
-            placeholder="Tìm theo tên, mô tả..."
+            placeholder="Tìm tên sản phẩm..."
             allowClear
             onSearch={(value) => setSearchText(value)}
             onChange={(e) => setSearchText(e.target.value)}
@@ -491,12 +493,11 @@ const ProductsPage = () => {
           <Form.Item
             label="Giá nhập (VND)"
             name="purchase_price"
-            rules={[{ required: true, message: "Nhập giá nhập" }]}
+            // extra="Giá nhập tự động cập nhật từ phiếu nhập kho gần nhất"
           >
             <InputNumber
               style={{ width: "100%" }}
-              min={0}
-              step={1000}
+              disabled={true}
               formatter={(value) =>
                 `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
               }
@@ -520,8 +521,15 @@ const ProductsPage = () => {
             />
           </Form.Item>
 
-          <Form.Item label="Tồn kho" name="stock" initialValue={0}>
-            <InputNumber style={{ width: "100%" }} min={0} />
+          <Form.Item 
+            label="Tồn kho hiện tại" 
+            name="stock" 
+            // extra="Số lượng tự động cập nhật khi hoàn tất phiếu nhập/xuất"
+          >
+            <InputNumber 
+              style={{ width: "100%" }} 
+              disabled // Vô hiệu hóa chỉnh sửa
+            />
           </Form.Item>
 
           <Form.Item label="Danh mục" name="category_id">
@@ -546,6 +554,7 @@ const ProductsPage = () => {
         </Form>
       </Modal>
     </Card>
+    </div>
   );
 };
 

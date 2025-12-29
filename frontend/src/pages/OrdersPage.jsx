@@ -439,12 +439,17 @@ const OrdersPage = () => {
 
   return (
     <>
+        <div className="dashboard-page">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Đơn hàng</h1>
+        <p className="dashboard-subtitle">Quản lý đơn hàng</p>
+      </div>
       <Card
-        title="Quản lý đơn hàng"
+        title="Danh sách đơn hàng"
         extra={
           <Space>
             <Search
-              placeholder="Tìm theo mã đơn, khách hàng, nhân viên..."
+              placeholder="Tìm theo mã đơn, khách hàng,..."
               allowClear
               onSearch={(v) => setSearchText(v)}
               onChange={(e) => setSearchText(e.target.value)}
@@ -649,6 +654,7 @@ const OrdersPage = () => {
           </>
         )}
       </Drawer>
+      </div>
     </>
   );
 };

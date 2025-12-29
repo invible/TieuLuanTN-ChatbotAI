@@ -127,7 +127,7 @@ const CategoriesPage = () => {
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
-        <h1 className="dashboard-title">Categories</h1>
+        <h1 className="dashboard-title">Danh mục</h1>
         <p className="dashboard-subtitle">Quản lý danh mục sản phẩm</p>
       </div>
 

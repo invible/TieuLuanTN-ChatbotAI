@@ -120,7 +120,7 @@ const BrandsPage = () => {
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
-        <h1 className="dashboard-title">Brands</h1>
+        <h1 className="dashboard-title">Thương hiệu</h1>
         <p className="dashboard-subtitle">Quản lý thương hiệu sản phẩm</p>
       </div>
 
