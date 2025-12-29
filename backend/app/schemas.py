@@ -70,30 +70,25 @@ class ProductBase(BaseModel):
     unit: Optional[str] = None
     packaging: Optional[str] = None
     image_url: Optional[str] = None
-    purchase_price: float
-    selling_price: float
-    stock: int = 0
+    selling_price: float  # giá bán do người quản trị nhập
     category_id: int
     brand_id: int
 
 class ProductCreate(ProductBase):
-    pass
+    purchase_price: float = 0.0
+    stock: int = 0
 
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
-    description: Optional[str] = None
-    unit: Optional[str] = None
-    packaging: Optional[str] = None
-    image_url: Optional[str] = None
-    purchase_price: Optional[float] = None
     selling_price: Optional[float] = None
-    stock: Optional[int] = None
     category_id: Optional[int] = None
     brand_id: Optional[int] = None
 
 class ProductOut(ProductBase):
     id: int
+    purchase_price: float 
+    stock: int           
     category_name: Optional[str] = None
     brand_name: Optional[str] = None
 
@@ -143,38 +138,6 @@ class BrandOut(BrandBase):
         orm_mode = True
 
 # ======================
-#  ORDERS
-# ======================
-
-class OrderBase(BaseModel):
-    user_id: int
-    customer_id: int
-    order_date: datetime
-    total_amount: float
-    note: Optional[str] = None
-    payment_method: str
-    status: Optional[str] = "completed"
-
-class OrderCreate(OrderBase):
-    pass
-
-class OrderUpdate(BaseModel):
-    user_id: Optional[int] = None
-    customer_id: Optional[int] = None
-    order_date: Optional[datetime] = None
-    total_amount: Optional[float] = None
-    note: Optional[str] = None
-    payment_method: Optional[str] = None
-    status: Optional[str] = None
-
-class OrderOut(OrderBase):
-    id: int
-    created_at: datetime | None = None
-
-    class Config:
-        orm_mode = True
-
-# ======================
 #  ORDER ITEMS
 # ======================
 
@@ -190,6 +153,40 @@ class OrderItemCreate(OrderItemBase):
 
 class OrderItemOut(OrderItemBase):
     id: int
+
+    class Config:
+        orm_mode = True
+
+# ======================
+#  ORDERS
+# ======================
+
+class OrderBase(BaseModel):
+    user_id: int
+    customer_id: int
+    order_date: datetime
+    total_amount: float
+    note: Optional[str] = None
+    payment_method: str
+    status: Optional[str] = "completed"
+
+class OrderCreate(OrderBase):
+    # Gửi kèm danh sách sản phẩm khi tạo đơn hàng để trừ kho
+    items: List[OrderItemCreate]
+
+class OrderUpdate(BaseModel):
+    user_id: Optional[int] = None
+    customer_id: Optional[int] = None
+    order_date: Optional[datetime] = None
+    total_amount: Optional[float] = None
+    note: Optional[str] = None
+    payment_method: Optional[str] = None
+    status: Optional[str] = None
+
+class OrderOut(OrderBase):
+    id: int
+    created_at: datetime | None = None
+    order_items: List[OrderItemOut] = []
 
     class Config:
         orm_mode = True
@@ -227,13 +224,12 @@ class CustomerOut(CustomerBase):
 # ======================
 
 class ReceiptItemBase(BaseModel):
-    receipt_id: int
     product_id: int
     quantity: int
     unit_price: float
 
 class ReceiptItemCreate(ReceiptItemBase):
-    pass
+    receipt_id: Optional[int] = None
 
 class ReceiptItemOut(ReceiptItemBase):
     id: int

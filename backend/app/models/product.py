@@ -12,8 +12,8 @@ class Product(Base):
     unit = Column(String(40), nullable=False)
     packaging = Column(String(40), nullable=True)
     image_url = Column(String(255), nullable=True)
-    purchase_price = Column(Numeric(10), nullable=False)
-    selling_price = Column(Numeric(10), nullable=False)
+    purchase_price = Column(Numeric(10), nullable=True)
+    selling_price = Column(Numeric(10), nullable=True)
     stock = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
