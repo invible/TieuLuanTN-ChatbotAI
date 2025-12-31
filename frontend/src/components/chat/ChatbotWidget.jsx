@@ -24,7 +24,7 @@ const ChatWidget = () => {
     {
       id: 1,
       from: "bot",
-      text: "Xin chào 👋, mình là Chatbot hỗ trợ phân tích bán hàng. Bạn cần hỏi gì cứ gõ nhé.",
+      text: "Chào bạn, mình là Chatbot hỗ trợ phân tích bán hàng của Hoàng Yến Shop. Bạn cần gì cứ hỏi mình nhé!",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -159,7 +159,7 @@ const handleSend = async () => {
             title={
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Avatar size="small" icon={<RobotOutlined />} />
-                Chatbot phân tích bán hàng
+                Chatbot AI
               </div>
             }
             extra={

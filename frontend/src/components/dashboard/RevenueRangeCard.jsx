@@ -1,11 +1,9 @@
-// src/components/dashboard/RevenueRangeCard.jsx
 import { useState, useEffect } from "react";
 import { Card, DatePicker, Button, message, Space } from "antd";
 import { Line } from "react-chartjs-2";
 import dayjs from "dayjs";
 import { getRevenueRange } from "../../services/reportApi";
 
-// ✅ ĐĂNG KÝ SCALE CHO CHART.JS (fix lỗi "category is not a registered scale")
 import {
   Chart as ChartJS,
   CategoryScale,

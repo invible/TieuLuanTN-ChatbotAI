@@ -521,7 +521,7 @@ const ProductsPage = () => {
             />
           </Form.Item>
 
-          <Form.Item 
+          {/* <Form.Item 
             label="Tồn kho hiện tại" 
             name="stock" 
             // extra="Số lượng tự động cập nhật khi hoàn tất phiếu nhập/xuất"
@@ -530,7 +530,7 @@ const ProductsPage = () => {
               style={{ width: "100%" }} 
               disabled // Vô hiệu hóa chỉnh sửa
             />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item label="Danh mục" name="category_id">
             <Select

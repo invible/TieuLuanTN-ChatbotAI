@@ -1,7 +1,7 @@
 // src/pages/BrandsPage.jsx
 import { useEffect, useState } from "react";
 import { Button, Card, Form, Input, Modal, Space, Table, message } from "antd";
-import { listBrands } from "../services/brandApi";
+import { createBrand, deleteBrand, listBrands, updateBrand } from "../services/brandApi";
 
 const BrandsPage = () => {
   const [brands, setBrands] = useState([]);
@@ -10,7 +10,7 @@ const BrandsPage = () => {
   const [editing, setEditing] = useState(null);
   const [form] = Form.useForm();
 
-  const loadBrands = async () => {
+  const fetchBrands = async () => {
     try {
       setLoading(true);
       const res = await listBrands();
@@ -24,7 +24,7 @@ const BrandsPage = () => {
   };
 
   useEffect(() => {
-    loadBrands();
+    fetchBrands();
   }, []);
 
   const openCreate = () => {
@@ -51,9 +51,9 @@ const BrandsPage = () => {
       cancelText: "Huỷ",
       onOk: async () => {
         try {
-          await axios.delete(`${API_BASE_URL}/brands/${record.id}`);
+          await deleteBrand(record.id);
           message.success("Đã xoá");
-          loadBrands();
+          fetchBrands();
         } catch (err) {
           console.error(err);
           message.error("Xoá thất bại");
@@ -66,14 +66,16 @@ const BrandsPage = () => {
     try {
       const values = await form.validateFields();
       if (editing) {
-        await axios.put(`${API_BASE_URL}/brands/${editing.id}`, values);
+        await updateBrand(editing.id, values);
         message.success("Cập nhật thương hiệu thành công");
       } else {
-        await axios.post(`${API_BASE_URL}/brands/`, values);
+        await createBrand(values);
         message.success("Thêm thương hiệu thành công");
       }
       setModalOpen(false);
-      loadBrands();
+      setEditing(null);
+      form.resetFields();
+      fetchBrands();
     } catch (err) {
       if (err?.errorFields) return;
       console.error(err);
@@ -144,18 +146,28 @@ const BrandsPage = () => {
       <Modal
         title={editing ? "Cập nhật thương hiệu" : "Thêm thương hiệu"}
         open={modalOpen}
-        onCancel={() => setModalOpen(false)}
-        onOk={handleSubmit}
-        okText="Lưu"
+        onCancel={() => {
+          setModalOpen(false);
+          setEditing(null);
+          form.resetFields();
+        }}
+        onOk={() => form.submit()}
+        okText={editing ? "Cập nhật" : "Thêm mới"}
+        cancelText="Huỷ"
         destroyOnClose
+        forceRender
       >
-        <Form layout="vertical" form={form} preserve={false}>
+        <Form
+          layout="vertical"
+          form={form}
+          onFinish={handleSubmit}
+        >
           <Form.Item
             label="Tên thương hiệu"
             name="name"
             rules={[{ required: true, message: "Nhập tên thương hiệu" }]}
           >
-            <Input placeholder="Ví dụ: Omron, Philips, Roche..." />
+            <Input placeholder="Ví dụ: Pasonic, Philips, Samsung..." />
           </Form.Item>
 
           <Form.Item

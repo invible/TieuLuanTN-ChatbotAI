@@ -33,21 +33,13 @@ const CategoriesPage = () => {
     setModalOpen(true);
   };
 
-  const openEdit = async (record) => {
-    try {
-      const data = await getCategory(record.id); // lấy theo id
-      setEditing(data);
-
-      setModalOpen(true);
-
-      form.setFieldsValue({
-        name: data?.name ?? "",
-        description: data?.description ?? "",
-      });
-    } catch (err) {
-      console.error(err);
-      message.error("Không tải được dữ liệu danh mục");
-    }
+  const openEdit = (record) => {
+    setEditing(record);
+    form.setFieldsValue({
+      name: record.name,
+      description: record.description,
+    });
+    setModalOpen(true);
   };
 
   const handleDelete = async (record) => {
@@ -77,7 +69,7 @@ const CategoriesPage = () => {
         await updateCategory(editing.id, values);
         message.success("Cập nhật danh mục thành công");
       } else {
-        await createCategory(editing.id, values);
+        await createCategory(values);
         message.success("Thêm danh mục thành công");
       }
       setModalOpen(false);
@@ -156,21 +148,23 @@ const CategoriesPage = () => {
           setEditing(null);
           form.resetFields();
         }}
-        onOk={handleSubmit}
-        okText="Lưu"
+        onOk={() => form.submit()}
+        okText={editing ? "Cập nhật" : "Thêm mới"}
+        cancelText="Huỷ"
         destroyOnClose
+        forceRender
       >
         <Form
           layout="vertical"
           form={form}
-          preserve={false}
+          onFinish={handleSubmit}
         >
           <Form.Item
             label="Tên danh mục"
             name="name"
             rules={[{ required: true, message: "Nhập tên danh mục" }]}
           >
-            <Input placeholder="Ví dụ: Thiết bị y tế, Khẩu trang..." />
+            <Input placeholder="Ví dụ: Đồ gia dụng, điện tử, thực phẩm..." />
           </Form.Item>
 
           <Form.Item label="Mô tả" name="description">

@@ -17,14 +17,10 @@ def get_dashboard_overview(db: Session = Depends(get_db)):
     # Tổng khách hàng (ở đây demo là distinct customer_id)
     total_customers = db.query(func.count(func.distinct(models.Order.customer_id))).scalar()
 
-    # Demo: bounce rate fake (sau bạn có thể tính thật)
-    bounce_rate = 47.0
-
     stats = schemas.StatSummary(
         revenue=float(total_revenue),
         sales=total_orders,
         customers=total_customers,
-        bounce_rate=bounce_rate,
     )
 
     # Sales theo tháng (demo, tính 12 tháng gần nhất)
@@ -48,28 +44,79 @@ def get_dashboard_overview(db: Session = Depends(get_db)):
         for row in monthly
     ]
 
-    # Traffic source: demo cứng (sau này bạn có thể lấy từ DB / GA)
-    traffic_sources = [
-        schemas.TrafficSource(name="Direct", value=45),
-        schemas.TrafficSource(name="Social", value=30),
-        schemas.TrafficSource(name="Referral", value=25),
-    ]
+    # Traffic source: 
+    category_rows = (
+        db.query(
+            models.Category.name.label("category"),
+            func.sum(models.OrderItem.quantity * models.OrderItem.unit_price).label("revenue"),
+        )
+        .join(models.Product, models.Product.category_id == models.Category.id)
+        .join(models.OrderItem, models.OrderItem.product_id == models.Product.id)
+        .group_by(models.Category.id)
+        .order_by(func.sum(models.OrderItem.quantity * models.OrderItem.unit_price).desc())
+        .all()
+    )
+    # Gom top 5 + nhóm Khác
+    traffic_sources = []
+    other_revenue = 0
+
+    for idx, row in enumerate(category_rows):
+        if idx < 5:
+            traffic_sources.append(
+                schemas.TrafficSource(
+                    name=row.category,
+                    value=int(row.revenue or 0)
+                )
+            )
+        else:
+            other_revenue += int(row.revenue or 0)
+
+    if other_revenue > 0:
+        traffic_sources.append(
+            schemas.TrafficSource(
+                name="Khác",
+                value=other_revenue
+            )
+        )
 
     # Recent activity: demo => bạn có thể map từ bảng orders, users,...
-    recent_activities = [
-        schemas.RecentActivity(
-            title="New order received",
-            description="Order #12345 from John Doe",
-            time="2 minutes ago",
-        ),
-        schemas.RecentActivity(
-            title="New customer registered",
-            description="Jane Smith joined the platform",
-            time="15 minutes ago",
-        ),
-    ]
+    recent_activities = []
 
-    # Top products: top 5 theo doanh thu
+    # Đơn hàng mới nhất
+    recent_orders = (
+        db.query(models.Order)
+        .order_by(models.Order.order_date.desc())
+        .limit(3)
+        .all()
+    )
+
+    for order in recent_orders:
+        recent_activities.append(
+            schemas.RecentActivity(
+                title="Đơn hàng mới",
+                description=f"Đơn hàng #{order.id} vừa được tạo",
+                time=order.order_date.strftime("%d/%m/%Y %H:%M"),
+            )
+        )
+
+    # Khách hàng mới
+    recent_customers = (
+        db.query(models.Customer)
+        .order_by(models.Customer.id.desc())
+        .limit(2)
+        .all()
+    )
+
+    for customer in recent_customers:
+        recent_activities.append(
+            schemas.RecentActivity(
+                title="Khách hàng mới",
+                description=f"Khách hàng {customer.name} vừa được thêm",
+                time="Gần đây",
+            )
+        )
+
+    # Top products: top 5 sản phẩm bán chạy nhất theo số lượng bán
     top_rows = (
         db.query(
             models.Product.id.label("product_id"),
@@ -79,7 +126,7 @@ def get_dashboard_overview(db: Session = Depends(get_db)):
         )
         .join(models.OrderItem, models.Product.id == models.OrderItem.product_id)
         .group_by(models.Product.id)
-        .order_by(func.sum(models.OrderItem.quantity * models.OrderItem.unit_price).desc())
+        .order_by(func.sum(models.OrderItem.quantity).desc())
         .limit(5)
         .all()
     )
@@ -90,7 +137,7 @@ def get_dashboard_overview(db: Session = Depends(get_db)):
             product=row.product,
             sales=int(row.sales or 0),
             revenue=float(row.revenue or 0),
-            status="In Stock",  # sau này check theo stock
+            status="In Stock",
         )
         for row in top_rows
     ]

@@ -212,21 +212,25 @@ const OrdersPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (record) => {
+  const handleCancelOrder = (record) => {
     Modal.confirm({
-      title: "Xoá đơn hàng?",
-      content: `Bạn chắc chắn muốn xoá đơn #${record.id}?`,
-      okText: "Xoá",
-      cancelText: "Huỷ",
+      title: "Hủy đơn hàng?",
+      content: `Bạn chắc chắn muốn hủy đơn #${record.id}? Trạng thái sẽ chuyển sang 'cancelled' và hoàn tồn kho.`,
+      okText: "Xác nhận hủy",
+      cancelText: "Đóng",
       okButtonProps: { danger: true },
       onOk: async () => {
         try {
-          await deleteOrder(record.id);
-          message.success("Đã xoá đơn hàng");
-          fetchOrders();
+          // Gọi API update đơn hàng sang trạng thái cancelled
+          await updateOrder(record.id, { 
+            ...record, // giữ các thông tin cũ
+            status: "cancelled" 
+          });
+          message.success("Đã hủy đơn hàng thành công");
+          fetchOrders(); // Load lại danh sách
         } catch (error) {
-          console.error("Lỗi xoá đơn hàng:", error);
-          message.error("Không xoá được đơn hàng");
+          console.error("Lỗi hủy đơn:", error);
+          message.error("Không thể hủy đơn hàng");
         }
       },
     });
@@ -271,20 +275,22 @@ const OrdersPage = () => {
 
   // ====== Filter search (theo id + tên KH + tên NV) ======
   const filteredOrders = useMemo(() => {
-    if (!searchText) return orders;
-    const text = searchText.toLowerCase();
-    return orders.filter((o) => {
-      const customerName = getCustomerName(o).toLowerCase?.() || "";
-      const userName = getUserName(o).toLowerCase?.() || "";
-      return (
-        String(o.id).includes(text) ||
-        String(o.customer_id ?? "").includes(text) ||
-        String(o.user_id ?? "").includes(text) ||
-        customerName.includes(text) ||
-        userName.includes(text) ||
-        o.status?.toLowerCase().includes(text) ||
-        o.payment_method?.toLowerCase().includes(text)
-      );
+    let result = orders;
+    if (searchText) {
+      const text = searchText.toLowerCase();
+      result = orders.filter((o) => {
+        const customerName = getCustomerName(o).toLowerCase?.() || "";
+        const userName = getUserName(o).toLowerCase?.() || "";
+        return (
+          String(o.id).includes(text) ||
+          customerName.includes(text) ||
+          userName.includes(text) ||
+          o.status?.toLowerCase().includes(text)
+        );
+      });
+    }
+    return [...result].sort((a, b) => {
+    return new Date(b.order_date) - new Date(a.order_date);
     });
   }, [orders, searchText, customerMap, userMap]);
 
@@ -315,7 +321,7 @@ const OrdersPage = () => {
       sorter: (a, b) => a.customer_id - b.customer_id,
     },
     {
-      title: "Nhân viên xuất đơn",
+      title: "Nhân viên bán hàng",
       dataIndex: "user_id",
       key: "user_id",
       width: 180,
@@ -362,27 +368,17 @@ const OrdersPage = () => {
       width: 210,
       render: (_, record) => (
         <Space>
-          <Button
-            icon={<EyeOutlined />}
-            size="small"
-            onClick={() => openDrawer(record)}
-          >
-            Chi tiết
-          </Button>
-          <Button
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => openEditModal(record)}
-          >
-            Sửa
-          </Button>
+          <Button icon={<EyeOutlined />} size="small" onClick={() => openDrawer(record)}>Chi tiết</Button>
+          
+          {/* Nút hủy đơn (ẩn nếu đơn đã bị hủy rồi) */}
           <Button
             icon={<DeleteOutlined />}
             size="small"
             danger
-            onClick={() => handleDelete(record)}
+            disabled={record.status === 'cancelled'}
+            onClick={() => handleCancelOrder(record)}
           >
-            Xoá
+            Hủy đơn
           </Button>
         </Space>
       ),
@@ -456,13 +452,6 @@ const OrdersPage = () => {
               style={{ width: 320 }}
               prefix={<SearchOutlined />}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={openCreateModal}
-            >
-              Tạo đơn hàng
-            </Button>
           </Space>
         }
       >
@@ -489,97 +478,36 @@ const OrdersPage = () => {
         destroyOnClose
         forceRender
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
-          <Form.Item
-            label="Nhân viên"
-            name="user_id"
-            rules={[{ required: true, message: "Chọn nhân viên" }]}
-          >
-            <Select
-              placeholder="Chọn nhân viên"
-              options={userOptions}
-              showSearch
-              optionFilterProp="label"
-            />
+  <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form.Item label="Nhân viên" name="user_id">
+            <Select options={userOptions} disabled={!!editingOrder} /> 
           </Form.Item>
 
-          <Form.Item
-            label="Khách hàng"
-            name="customer_id"
-            rules={[{ required: true, message: "Chọn khách hàng" }]}
-          >
-            <Select
-              placeholder="Chọn khách hàng"
-              options={customerOptions}
-              showSearch
-              optionFilterProp="label"
-            />
+          <Form.Item label="Khách hàng" name="customer_id">
+            <Select options={customerOptions} disabled={!!editingOrder} />
           </Form.Item>
 
-          <Form.Item
-            label="Ngày đặt"
-            name="order_date"
-            rules={[{ required: true, message: "Chọn ngày đặt" }]}
-          >
-            <DatePicker
-              style={{ width: "100%" }}
-              showTime
-              format="YYYY-MM-DD HH:mm:ss"
-            />
+          <Form.Item label="Ngày đặt" name="order_date">
+            <DatePicker style={{ width: "100%" }} showTime disabled={!!editingOrder} />
           </Form.Item>
 
-          <Form.Item
-            label="Tổng tiền (VND)"
-            name="total_amount"
-            rules={[{ required: true, message: "Nhập tổng tiền" }]}
-          >
-            <InputNumber
-              style={{ width: "100%" }}
-              min={0}
-              step={1000}
-              formatter={(value) =>
-                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-              }
-              parser={(value) => value.replace(/(,|\s)/g, "")}
-            />
+          <Form.Item label="Tổng tiền (VND)" name="total_amount">
+            <InputNumber style={{ width: "100%" }} disabled={!!editingOrder} />
           </Form.Item>
 
-          <Form.Item
-            label="Hình thức thanh toán"
-            name="payment_method"
-            rules={[
-              { required: true, message: "Chọn hình thức thanh toán" },
-            ]}
-          >
-            <Select>
-              <Select.Option value="Tiền mặt">
-                Tiền mặt
-              </Select.Option>
-              <Select.Option value="Chuyển khoản">
-                Chuyển khoản
-              </Select.Option>
+          <Form.Item label="Hình thức thanh toán" name="payment_method">
+            <Select disabled={!!editingOrder}>
+              <Select.Option value="Tiền mặt">Tiền mặt</Select.Option>
+              <Select.Option value="Chuyển khoản">Chuyển khoản</Select.Option>
             </Select>
           </Form.Item>
 
-          <Form.Item
-            label="Trạng thái"
-            name="status"
-            rules={[{ required: true, message: "Chọn trạng thái" }]}
-          >
+          {/* Hai trường này luôn được phép sửa */}
+          <Form.Item label="Trạng thái" name="status">
             <Select>
-              <Select.Option value="completed">
-                completed
-              </Select.Option>
-              <Select.Option value="pending">
-                pending
-              </Select.Option>
-              <Select.Option value="cancelled">
-                cancelled
-              </Select.Option>
+              <Select.Option value="completed">completed</Select.Option>
+              <Select.Option value="pending">pending</Select.Option>
+              <Select.Option value="cancelled">cancelled</Select.Option>
             </Select>
           </Form.Item>
 

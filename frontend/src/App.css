@@ -96,3 +96,48 @@ body,
   padding: 24px;
   background: #f5f6fa;
 }
+
+/* Notification Dropdown CSS */
+.notification-dropdown {
+  width: 320px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, .1);
+  padding: 12px;
+}
+
+.notification-dropdown h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.notification-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.notification-desc {
+  font-size: 13px;
+  color: #475569;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: #94A3B8;
+}
+
+.notification-empty {
+  font-size: 13px;
+  color: #94A3B8;
+  padding: 12px 0;
+}

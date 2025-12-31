@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Layout,
   Menu,
@@ -32,6 +32,8 @@ import RegisterPage from "./pages/RegisterPage";
 
 import ChatWidget from "./components/chat/ChatbotWidget";
 
+import { getDashboardOverview } from './services/dashboardApi';
+
 import { MENU_ITEMS } from './config/menu.config';
 import { getOpenKeysFromPath } from './utils/menu.helper';
 
@@ -45,6 +47,27 @@ const App = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loadingDashboard, setLoadingDashboard] = useState(false);
+
+  const fetchDashboard = async () => {
+    try {
+      setLoadingDashboard(true);
+      const res = await getDashboardOverview();
+      setDashboardData(res.data || []);
+    } catch (error) {
+      console.error('Không tải được dashboard:', error);
+    } finally {
+      setLoadingDashboard(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  const notifications = dashboardData?.recent_activities || [];
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -81,14 +104,38 @@ const App = () => {
             >
               {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             </span>
-            <span className="header-title">Dashboard</span>
+            <span className="header-title">Quản trị bán hàng - Hoàng Yến Shop</span>
           </div>
 
           <div className="header-right">
 
-            <Badge count={3} offset={[-2, 4]}>
+          <Dropdown
+            placement="bottomRight"
+            trigger={['click']}
+            dropdownRender={() => (
+              <div className="notification-dropdown">
+                <h4>Thông báo</h4>
+
+                {notifications.length === 0 && (
+                  <div className="notification-empty">
+                    Không có thông báo mới
+                  </div>
+                )}
+
+                {notifications.slice(0, 5).map((item, index) => (
+                  <div key={index} className="notification-item">
+                    <div className="notification-title">{item.title}</div>
+                    <div className="notification-desc">{item.description}</div>
+                    <div className="notification-time">{item.time}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          >
+            <Badge count={notifications.length} offset={[-2, 4]}>
               <BellOutlined className="header-icon" />
             </Badge>
+          </Dropdown>
 
             <Dropdown
               menu={{ items: MENU_ITEMS }}
@@ -104,7 +151,7 @@ const App = () => {
 
         <Content className="content">
           <Routes>
-            <Route path="/" element={<DashboardPage />} />
+            <Route path="/" element={<DashboardPage dashboardData={dashboardData} loading={loadingDashboard} />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/brands" element={<BrandsPage />} />
@@ -112,7 +159,7 @@ const App = () => {
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/customers" element={<CustomersPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/checkout" element={<CheckoutPage onDashboardRefresh={fetchDashboard}/>} />
           </Routes>
         </Content>
       </Layout>

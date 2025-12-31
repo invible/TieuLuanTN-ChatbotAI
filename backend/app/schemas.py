@@ -108,7 +108,7 @@ class CategoryCreate(CategoryBase):
     pass
 
 class CategoryUpdate(BaseModel):
-    name: Optional[str] = None
+    name: str
     description: Optional[str] = None
 
 class CategoryOut(CategoryBase):
@@ -324,7 +324,6 @@ class StatSummary(BaseModel):
     revenue: float
     sales: int
     customers: int
-    bounce_rate: float
 
 class SalesPoint(BaseModel):
     month: str

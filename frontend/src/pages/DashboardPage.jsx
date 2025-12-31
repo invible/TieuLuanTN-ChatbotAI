@@ -37,8 +37,6 @@ ChartJS.register(
   Filler
 );
 
-// Sample data for demonstration
-
 const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState(null);
@@ -64,6 +62,8 @@ const sales = overview?.sales_overview ?? [];
 const traffic = overview?.traffic_sources ?? [];
 const activities = overview?.recent_activities ?? [];
 const products = overview?.top_products ?? [];
+
+const aov = stats.sales > 0 ? stats.revenue / stats.sales : 0;
 
 const lineOptions = {
   responsive: true,
@@ -92,7 +92,7 @@ const lineOptions = {
       beginAtZero: true,
       title: {
         display: true,
-        text: 'Sales (quantity)',
+        text: 'Số đơn hàng',
       },
     },
     yRevenue: {
@@ -100,7 +100,7 @@ const lineOptions = {
       position: 'right',
       beginAtZero: true,
       grid: {
-        drawOnChartArea: false, // không vẽ grid trùng lặp
+        drawOnChartArea: false,
       },
       ticks: {
         callback: (value) =>
@@ -110,7 +110,7 @@ const lineOptions = {
       },
       title: {
         display: true,
-        text: 'Revenue (VND)',
+        text: 'Doanh thu (VNĐ)',
       },
     },
   },
@@ -120,7 +120,7 @@ const lineData = {
   labels: (sales ?? []).map((item) => item.month),
   datasets: [
     {
-      label: "Sales",
+      label: "Đơn hàng",
       data: (sales ?? []).map((item) => item.sales),
       borderColor: "#00bcd4",
       backgroundColor: "rgba(0,188,212,0.15)",
@@ -129,7 +129,7 @@ const lineData = {
       yAxisID: 'ySales',
     },
     {
-      label: "Revenue",
+      label: "Doanh thu",
       data: (sales ?? []).map((item) => item.revenue),
       borderColor: "#3f51b5",
       backgroundColor: "rgba(63,81,181,0.15)",
@@ -145,7 +145,7 @@ const doughnutData = {
   datasets: [
     {
       data: (traffic ?? []).map((t) => t.value),
-      backgroundColor: ['#3f51b5', '#00bcd4', '#ff9800'],
+      backgroundColor: ['#3f51b5', '#00bcd4', '#ff9800', '#4caf50', '#f44336', '#9c27b0'],
       borderWidth: 0,
     },
   ],
@@ -153,7 +153,7 @@ const doughnutData = {
 
 const productColumns = [
     {
-      title: 'Product',
+      title: 'Tên sản phẩm',
       dataIndex: 'product',
       key: 'product',
       render: (text) => (
@@ -164,13 +164,13 @@ const productColumns = [
       ),
     },
     {
-      title: 'Sales',
+      title: 'Số lượng đã bán',
       dataIndex: 'sales',
       key: 'sales',
-      align: 'right',
+      align: 'center',
     },
     {
-      title: 'Revenue',
+      title: 'Doanh thu',
       dataIndex: 'revenue',
       key: 'revenue',
       align: 'right',
@@ -178,7 +178,7 @@ const productColumns = [
       Number(value).toLocaleString("en-US")  // 👈 format
     },
     {
-      title: 'Status',
+      title: 'Tình trạng',
       dataIndex: 'status',
       key: 'status',
       align: 'center',
@@ -197,7 +197,7 @@ const productColumns = [
       <Row gutter={[16, 16]} className="stats-row">
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card className="stat-card stat-card-green">
-            <Statistic title="REVENUE" value={stats.revenue} precision={0} suffix="VNĐ" />
+            <Statistic title="DOANH THU" value={stats?.revenue?.toLocaleString('vi-VN')} suffix="VNĐ" />
             <div className="stat-footer">
               <Text type="success">↑ 12.5%</Text>
             </div>
@@ -206,7 +206,7 @@ const productColumns = [
 
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card className="stat-card stat-card-purple">
-            <Statistic title="SALES" value={stats.sales} precision={0} />
+            <Statistic title="ĐƠN HÀNG" value={stats?.sales?.toLocaleString('vi-VN')} />
             <div className="stat-footer">
               <Text type="success">↑ 8.2%</Text>
             </div>
@@ -214,19 +214,19 @@ const productColumns = [
         </Col>
 
         <Col xs={24} sm={12} md={12} lg={6}>
-          <Card className="stat-card stat-card-blue">
-            <Statistic title="CUSTOMERS" value={stats.customers} precision={0} />
+          <Card className="stat-card stat-card-orange">
+            <Statistic title="GIÁ TRỊ TRUNG BÌNH ĐƠN (AOV)" value={Math.round(aov).toLocaleString('vi-VN')} suffix="VNĐ"/>
             <div className="stat-footer">
-              <Text type="success">↑ 5.7%</Text>
+              <Text type="danger">↓ 2.1%</Text>
             </div>
           </Card>
         </Col>
 
         <Col xs={24} sm={12} md={12} lg={6}>
-          <Card className="stat-card stat-card-orange">
-            <Statistic title="BOUNCE RATE" value={stats.bounce_rate} precision={1} suffix="%" />
+          <Card className="stat-card stat-card-blue">
+            <Statistic title="KHÁCH HÀNG" value={stats.customers} precision={0} />
             <div className="stat-footer">
-              <Text type="danger">↓ 2.1%</Text>
+              <Text type="success">↑ 5.7%</Text>
             </div>
           </Card>
         </Col>
@@ -235,7 +235,7 @@ const productColumns = [
       {/* charts row */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={16}>
-          <Card title="Sales Overview">
+          <Card title="Tổng quan bán hàng">
             <div style={{ width: '100%', height: 300 }}>
               <Line options={lineOptions} data={lineData} />
             </div>
@@ -243,7 +243,7 @@ const productColumns = [
         </Col>
 
         <Col xs={24} lg={8}>
-          <Card title="Traffic Sources">
+          <Card title="Nguồn truy cập">
             <div style={{ width: '100%', height: 260 }}>
               <Doughnut data={doughnutData} options={doughnutData.labels} />
             </div>
@@ -254,7 +254,7 @@ const productColumns = [
       {/* bottom row */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={12}>
-          <Card title="Recent Activity">
+          <Card title="Hoạt động gần đây">
             <List
               itemLayout="horizontal"
               dataSource={activities ?? []}
@@ -283,7 +283,7 @@ const productColumns = [
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card title="Top Products">
+          <Card title="Sản phẩm bán chạy">
             <Table
               columns={productColumns}
               dataSource={products ?? []}

@@ -4,13 +4,13 @@ export const listBrands = () =>
   api.get('/brands');
 
 export const getBrand = (id) =>
-  api.get(`/brands/${id}`).then((res) => res.data);
+  api.get(`/brands/${id}`);
 
 export const createBrand = (data) =>
-  api.post('/brands', data).then((res) => res.data);
+  api.post('/brands', data);
 
 export const updateBrand = (id, data) =>
-  api.put(`/brands/${id}`, data).then((res) => res.data);
+  api.put(`/brands/${id}`, data);
 
 export const deleteBrand = (id) =>
-  api.delete(`/brands/${id}`).then((res) => res.data);
+  api.delete(`/brands/${id}`);

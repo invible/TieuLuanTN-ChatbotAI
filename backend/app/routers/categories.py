@@ -30,12 +30,17 @@ def get_category(cat_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{cat_id}", response_model=schemas.CategoryOut)
-def update_category(cat_id: int, cat: schemas.CategoryUpdate, db: Session = Depends(get_db)):
+def update_category(cat_id: int, cat_in: schemas.CategoryUpdate, db: Session = Depends(get_db)):
     obj = db.query(models.Category).filter(models.Category.id == cat_id).first()
     if not obj:
         raise HTTPException(404, "Danh mục không tồn tại")
-    for field, value in cat.dict(exclude_unset=True).items():
-        setattr(cat, field, value)
+    
+    update_data = cat_in.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(obj, key, value)
+
+    # 3. QUAN TRỌNG: Phải có commit để lưu vào ổ cứng
+    db.add(obj)
     db.commit()
     db.refresh(obj)
     return obj

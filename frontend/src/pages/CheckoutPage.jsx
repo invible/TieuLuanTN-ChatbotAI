@@ -164,6 +164,9 @@ export default function CheckoutPage() {
       message.success("Thanh toán thành công!");
       setItems([]);
       setCustomer(null);
+      if (onDashboardRefresh) {
+        onDashboardRefresh();
+      }
     } catch (err) {
       console.error("Lỗi thanh toán:", err.response?.data); // Debug 2: Xem lỗi đầy đủ trong Console
     

@@ -74,6 +74,32 @@ def create_order(order_in: schemas.OrderCreate, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback() # Nếu có lỗi, hủy bỏ toàn bộ thao tác
         raise HTTPException(status_code=500, detail="Lỗi hệ thống khi tạo đơn hàng")
+    
+@router.put("/{order_id}", response_model=schemas.OrderOut)
+def update_order(order_id: int, order_in: schemas.OrderUpdate, db: Session = Depends(get_db)):
+    # 1. Tìm đơn hàng tồn tại
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    if not order:
+        raise HTTPException(404, "Đơn hàng không tồn tại")
+
+    # 2. Xử lý logic Hủy đơn (Chuyển sang cancelled)
+    # Nếu trạng thái cũ là 'completed' và trạng thái mới là 'cancelled' -> Thực hiện hoàn kho
+    if order.status == "completed" and order_in.status == "cancelled":
+        for item in order.order_items:
+            adjust_inventory(db, item.product_id, item.quantity)
+            
+    # 3. Cập nhật các trường dữ liệu
+    update_data = order_in.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(order, field, value)
+
+    try:
+        db.commit()
+        db.refresh(order)
+        return order
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Lỗi khi cập nhật đơn hàng")
 
 @router.delete("/{order_id}")
 def delete_order(order_id: int, db: Session = Depends(get_db)):

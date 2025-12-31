@@ -26,6 +26,8 @@ def update_brand(br_id: str, br: schemas.BrandUpdate, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="Thương hiệu không tồn tại")
     for field, value in br.dict(exclude_unset=True).items():
         setattr(obj, field, value)
+        
+    db.add(obj)
     db.commit()
     db.refresh(obj)
     return obj

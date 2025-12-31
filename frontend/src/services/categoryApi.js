@@ -4,13 +4,13 @@ export const listCategories = () =>
   api.get('/categories');
 
 export const getCategory = (id) =>
-  api.get(`/categories/${id}`).then((res) => res.data);
+  api.get(`/categories/${id}`);
 
 export const createCategory = (data) =>
-  api.post('/categories', data).then((res) => res.data);
+  api.post('/categories', data);
 
 export const updateCategory = (id, data) =>
-  api.put(`/categories/${id}`, data).then((res) => res.data);
+  api.put(`/categories/${id}`, data);
 
 export const deleteCategory = (id) =>
-  api.delete(`/categories/${id}`).then((res) => res.data);
+  api.delete(`/categories/${id}`);
