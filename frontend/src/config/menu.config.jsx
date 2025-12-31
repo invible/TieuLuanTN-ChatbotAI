@@ -5,9 +5,18 @@ import {
   FileTextOutlined,
   FormOutlined,
   UserOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 
+import { Link } from "react-router-dom";
+
 export const MENU_ITEMS = [
+  {
+  key: 'checkout',
+  label: <Link to="/checkout">Bán hàng</Link>,
+  icon: <SearchOutlined />,
+  path: '/checkout',
+  },
   {
     key: '/',
     icon: <DashboardOutlined />,

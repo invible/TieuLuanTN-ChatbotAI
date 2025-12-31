@@ -34,13 +34,13 @@ def adjust_inventory(db: Session, product_id: int, quantity_change: int):
 
 @router.post("/", response_model=schemas.OrderOut)
 def create_order(order_in: schemas.OrderCreate, db: Session = Depends(get_db)):
-    # 1. Kiểm tra user
+    # 1. Kiểm tra Nhân viên (User) có tồn tại không
     user = db.query(models.User).filter(models.User.id == order_in.user_id).first()
     if not user:
-        raise HTTPException(400, "Người dùng không tồn tại")
+        raise HTTPException(status_code=400, detail="Nhân viên không tồn tại")
 
-    # 2. Tạo header đơn hàng
-    order = models.Order(
+    # 2. Tạo Header đơn hàng
+    new_order = models.Order(
         user_id=order_in.user_id,
         customer_id=order_in.customer_id,
         order_date=order_in.order_date,
@@ -49,27 +49,31 @@ def create_order(order_in: schemas.OrderCreate, db: Session = Depends(get_db)):
         payment_method=order_in.payment_method,
         status=order_in.status or "completed"
     )
-    db.add(order)
-    db.flush() # Để lấy order.id
+    db.add(new_order)
+    db.flush() # Đẩy dữ liệu tạm để lấy new_order.id
 
-    # 3. Tạo items và trừ kho
+    # 3. Duyệt danh sách items gửi từ Checkout
     for item in order_in.items:
+        # Kiểm tra tồn kho trước khi thực hiện bất kỳ lệnh INSERT nào
+        adjust_inventory(db, item.product_id, -item.quantity)
+
+        # Thêm vào chi tiết đơn hàng
         new_item = models.OrderItem(
-            order_id=order.id,
+            order_id=new_order.id,
             product_id=item.product_id,
             quantity=item.quantity,
             unit_price=item.unit_price,
             discount=item.discount
         )
         db.add(new_item)
-        
-        # Chỉ trừ kho nếu đơn hàng ở trạng thái 'completed'
-        if order.status == "completed":
-            adjust_inventory(db, item.product_id, -item.quantity)
 
-    db.commit()
-    db.refresh(order)
-    return order
+    try:
+        db.commit() # Xác nhận lưu toàn bộ đơn hàng và trừ kho
+        db.refresh(new_order)
+        return new_order
+    except Exception as e:
+        db.rollback() # Nếu có lỗi, hủy bỏ toàn bộ thao tác
+        raise HTTPException(status_code=500, detail="Lỗi hệ thống khi tạo đơn hàng")
 
 @router.delete("/{order_id}")
 def delete_order(order_id: int, db: Session = Depends(get_db)):

@@ -1,0 +1,117 @@
+/* Tổng thể Layout */
+.pos-wrapper {
+    height: 100vh;
+    background: #fff;
+}
+
+.pos-content {
+    background: #f8f9fa;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Thanh tìm kiếm */
+.pos-search-bar {
+    background: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 12px;
+}
+
+.search-input {
+    border: 1px solid #d9d9d9 !important;
+    border-radius: 6px !important;
+}
+
+/* Bảng giỏ hàng */
+.pos-table-container {
+    background: #fff;
+    border-radius: 8px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.ant-table-thead>tr>th {
+    background: #fafafa !important;
+    font-weight: 600 !important;
+}
+
+.qty-control {
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    padding: 2px 4px;
+}
+
+/* Sidebar thanh toán */
+.pos-sider {
+    border-left: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sider-section {
+    padding: 20px;
+    border-bottom: 8px solid #f8f9fa;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.total-box {
+    background: #e6f7ff;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: right;
+    margin: 15px 0;
+}
+
+.total-label {
+    font-size: 14px;
+    color: #1890ff;
+    font-weight: 600;
+}
+
+.total-amount {
+    margin: 0 !important;
+    color: #003a8c !important;
+}
+
+.btn-checkout {
+    height: 60px !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    margin-top: 20px;
+    background: #1890ff !important;
+}
+
+.pos-empty {
+    padding: 100px 0;
+    color: #bfbfbf;
+    font-style: italic;
+}
+
+.pos-wrapper {
+    border-radius: 0 0 8px 8px;
+    /* Bo góc dưới để khớp với Card */
+    overflow: hidden;
+}
+
+.pos-search-bar {
+    padding: 16px;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    gap: 8px;
+}

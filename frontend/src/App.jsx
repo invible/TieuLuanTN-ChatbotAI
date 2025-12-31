@@ -25,6 +25,7 @@ import OrdersPage from './pages/OrdersPage';
 import UsersPage from './pages/UsersPage';
 import CustomersPage from "./pages/CustomersPage";
 import ReceiptsPage from "./pages/ReceiptsPage";
+import CheckoutPage from "./pages/CheckoutPage";
 
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -111,6 +112,7 @@ const App = () => {
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/customers" element={<CustomersPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
           </Routes>
         </Content>
       </Layout>

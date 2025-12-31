@@ -164,7 +164,7 @@ const OrdersPage = () => {
     if (customerMap.has(order.customer_id))
       return customerMap.get(order.customer_id);
     if (order.customer_id) return `#${order.customer_id}`;
-    return "-";
+    return "Khách lẻ";
   };
 
   const getUserName = (order) => {
@@ -312,6 +312,7 @@ const OrdersPage = () => {
       key: "customer_id",
       width: 200,
       render: (_, record) => getCustomerName(record),
+      sorter: (a, b) => a.customer_id - b.customer_id,
     },
     {
       title: "Nhân viên xuất đơn",
@@ -319,6 +320,7 @@ const OrdersPage = () => {
       key: "user_id",
       width: 180,
       render: (_, record) => getUserName(record),
+      sorter: (a, b) => a.user_id - b.user_id,
     },
     {
       title: "Tổng tiền (VND)",
@@ -326,8 +328,6 @@ const OrdersPage = () => {
       key: "total_amount",
       align: "right",
       render: (value) => `${Number(value).toLocaleString()}`,
-      sorter: (a, b) =>
-        Number(a.total_amount) - Number(b.total_amount),
     },
     {
       title: "Thanh toán",

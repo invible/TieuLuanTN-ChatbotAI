@@ -142,14 +142,16 @@ class BrandOut(BrandBase):
 # ======================
 
 class OrderItemBase(BaseModel):
-    order_id: int
     product_id: int
     quantity: int
     unit_price: float
     discount: Optional[float] = 0.0
 
 class OrderItemCreate(OrderItemBase):
-    pass
+    product_id: int
+    quantity: int
+    unit_price: float
+    discount: float = 0 
 
 class OrderItemOut(OrderItemBase):
     id: int
@@ -163,7 +165,7 @@ class OrderItemOut(OrderItemBase):
 
 class OrderBase(BaseModel):
     user_id: int
-    customer_id: int
+    customer_id: Optional[int] = None
     order_date: datetime
     total_amount: float
     note: Optional[str] = None
@@ -172,7 +174,14 @@ class OrderBase(BaseModel):
 
 class OrderCreate(OrderBase):
     # Gửi kèm danh sách sản phẩm khi tạo đơn hàng để trừ kho
-    items: List[OrderItemCreate]
+    user_id: int
+    customer_id: Optional[int] = None
+    order_date: datetime
+    total_amount: float
+    payment_method: str
+    note: Optional[str] = None
+    status: Optional[str] = "completed"
+    items: List[OrderItemCreate] # Danh sách chi tiết sản phẩm gửi kèm
 
 class OrderUpdate(BaseModel):
     user_id: Optional[int] = None
@@ -185,7 +194,7 @@ class OrderUpdate(BaseModel):
 
 class OrderOut(OrderBase):
     id: int
-    created_at: datetime | None = None
+    created_at: Optional[datetime] = None
     order_items: List[OrderItemOut] = []
 
     class Config:
