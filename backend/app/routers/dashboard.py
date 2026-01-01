@@ -24,13 +24,16 @@ def get_dashboard_overview(db: Session = Depends(get_db)):
     )
 
     # Sales theo tháng (demo, tính 12 tháng gần nhất)
+    month_expr = func.date_format(models.Order.order_date, "%m/%Y")
+
     monthly = (
         db.query(
-            func.date_format(models.Order.order_date, "%b").label("month"),
+            month_expr.label("month"),
             func.sum(models.Order.total_amount).label("revenue"),
             func.count(models.Order.id).label("sales"),
         )
-        .group_by(func.date_format(models.Order.order_date, "%Y-%m"))
+        .filter(models.Order.order_date.isnot(None))
+        .group_by(month_expr)
         .order_by(func.min(models.Order.order_date))
         .limit(12)
         .all()

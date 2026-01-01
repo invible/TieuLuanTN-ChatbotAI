@@ -19,6 +19,13 @@ import { createOrder } from "../services/orderApi";
 
 import "../styles/checkout.css";
 
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const { Content, Sider, Header } = Layout;
 const { Title, Text } = Typography;
 
@@ -132,7 +139,7 @@ export default function CheckoutPage() {
   const formatMoney = (value) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value || 0);
 
   /* ====================== CHECKOUT (CONNECT BACKEND) ====================== */
-  const handleCheckout = async () => {
+  const handleCheckout = async ({ onDashboardRefresh }) => {
     if (items.length === 0) {
       message.warning("Giỏ hàng đang trống");
       return;
@@ -144,7 +151,7 @@ export default function CheckoutPage() {
       const payload = {
         user_id: 1, // TODO: Lấy ID nhân viên từ Context/LocalStorage đăng nhập
         customer_id: customer ? customer.id : null, // Backend cần handle null nếu bán cho khách lẻ
-        order_date: new Date().toISOString(),
+        order_date: dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DDTHH:mm:ss"),
         total_amount: grandTotal,
         note: "Bán hàng tại quầy",
         payment_method: paymentMethod,

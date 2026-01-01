@@ -104,9 +104,7 @@ const lineOptions = {
       },
       ticks: {
         callback: (value) =>
-          Number(value).toLocaleString(undefined, {
-            maximumFractionDigits: 0,
-          }),
+          Number(value).toLocaleString('vi-VN'),
       },
       title: {
         display: true,
