@@ -24,23 +24,94 @@
     margin-top: 12px;
 }
 
+/* Màu Xanh Lá: Đậm hơn và có chiều sâu */
 .stat-card-green {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
 }
 
+/* Màu Tím: Tăng sắc độ để chữ trắng sắc nét */
 .stat-card-purple {
-    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%);
+    box-shadow: 0 4px 15px rgba(142, 68, 173, 0.3);
 }
 
+/* Màu Xanh Dương: Chuyển sang tông Navy lai để tạo vẻ chuyên nghiệp */
 .stat-card-blue {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #2980b9 0%, #1a5276 100%);
+    box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
 }
 
+/* Màu Cam: Chuyển sang tông Cam cháy để tránh bị lóa */
 .stat-card-orange {
-    background: linear-gradient(135deg, #e67e22, #d35400);
+    background: linear-gradient(135deg, #e67e22 0%, #a04000 100%);
+    box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
 }
 
 /* card chung */
 .ant-card {
     border-radius: 8px;
+}
+
+/* Nền tổng thể dashboard dịu hơn */
+.dashboard-wrapper {
+    background-color: #f8f9fa;
+    padding: 24px;
+}
+
+/* Thẻ chỉ số phong cách hiện đại */
+.stat-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-title {
+    color: #8c8c8c;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+/* Màu sắc dịu nhẹ cho từng loại thẻ */
+.card-revenue {
+    border-left: 4px solid #52c41a;
+}
+
+.card-orders {
+    border-left: 4px solid #1890ff;
+}
+
+.card-aov {
+    border-left: 4px solid #faad14;
+}
+
+.card-customers {
+    border-left: 4px solid #722ed1;
+}
+
+.stat-icon-box {
+    float: right;
+    font-size: 24px;
+    opacity: 0.2;
+}
+
+.stat-trend {
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.trend-up {
+    color: #52c41a;
+}
+
+.trend-down {
+    color: #ff4d4f;
 }

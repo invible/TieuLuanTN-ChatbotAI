@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 from app.db import get_db
 from app import models, schemas
@@ -10,6 +12,9 @@ router = APIRouter(tags=["Dashboard"])
 
 @router.get("/dashboard", response_model=schemas.DashboardOverview)
 def get_dashboard_overview(db: Session = Depends(get_db)):
+    # Xác định mốc thời gian 12 tháng trước
+    one_year_ago = datetime.now() - timedelta(days=365)
+
     # Tổng doanh thu
     total_revenue = db.query(func.coalesce(func.sum(models.Order.total_amount), 0)).scalar()
     # Tổng số đơn (sales)
@@ -23,29 +28,48 @@ def get_dashboard_overview(db: Session = Depends(get_db)):
         customers=total_customers,
     )
 
-    # Sales theo tháng (demo, tính 12 tháng gần nhất)
+    # 1. Lấy mốc 12 tháng gần nhất
+    now = datetime.now()
+    # Tạo danh sách 12 tháng (định dạng MM/YYYY)
+    last_12_months = []
+    for i in range(11, -1, -1):
+        month_date = now - relativedelta(months=i)
+        last_12_months.append(month_date.strftime("%m/%Y"))
+
+    # 2. Truy vấn dữ liệu thực tế
+    one_year_ago = now - relativedelta(months=11)
     month_expr = func.date_format(models.Order.order_date, "%m/%Y")
 
-    monthly = (
+    db_monthly = (
         db.query(
             month_expr.label("month"),
             func.sum(models.Order.total_amount).label("revenue"),
             func.count(models.Order.id).label("sales"),
         )
-        .filter(models.Order.order_date.isnot(None))
+        .filter(models.Order.order_date >= one_year_ago.replace(day=1))
         .group_by(month_expr)
-        .order_by(func.min(models.Order.order_date))
-        .limit(12)
         .all()
     )
-    sales_overview = [
-        schemas.SalesPoint(
-            month=row.month,
-            sales=float(row.sales),
-            revenue=float(row.revenue),
-        )
-        for row in monthly
-    ]
+
+    # Chuyển dữ liệu DB thành dictionary để tra cứu nhanh
+    stats_map = {row.month: row for row in db_monthly}
+
+    # 3. Kết hợp: Nếu tháng nào không có trong DB thì gán giá trị = 0
+    sales_overview = []
+    for m in last_12_months:
+        if m in stats_map:
+            row = stats_map[m]
+            sales_overview.append(schemas.SalesPoint(
+                month=m,
+                sales=float(row.sales),
+                revenue=float(row.revenue)
+            ))
+        else:
+            sales_overview.append(schemas.SalesPoint(
+                month=m,
+                sales=0,
+                revenue=0
+            ))
 
     # Traffic source: 
     category_rows = (

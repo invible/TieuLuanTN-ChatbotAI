@@ -11,6 +11,11 @@ import {
   Tag,
   Table,
 } from 'antd';
+import { 
+  ShoppingCartOutlined, 
+  UserAddOutlined, 
+  HistoryOutlined 
+} from '@ant-design/icons';
 import '../styles/dashboard.css';
 
 import {
@@ -34,7 +39,7 @@ ChartJS.register(
   ArcElement,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 const DashboardPage = () => {
@@ -71,16 +76,21 @@ const lineOptions = {
   plugins: {
     legend: {
       position: 'top',
-      labels: { usePointStyle: true },
+      labels: { 
+        usePointStyle: true,
+        padding: 20,
+        font: { size: 12, weight: '600' }
+      },
     },
     tooltip: {
       mode: 'index',
       intersect: false,
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      titleColor: '#000',
+      bodyColor: '#666',
+      borderColor: '#dfdfdf',
+      borderWidth: 1,
     },
-  },
-  interaction: {
-    mode: 'nearest',
-    intersect: false,
   },
   scales: {
     x: {
@@ -90,25 +100,20 @@ const lineOptions = {
       type: 'linear',
       position: 'left',
       beginAtZero: true,
-      title: {
-        display: true,
-        text: 'Số đơn hàng',
-      },
+      ticks: { color: '#ff4d4f' }
     },
     yRevenue: {
       type: 'linear',
       position: 'right',
       beginAtZero: true,
-      grid: {
-        drawOnChartArea: false,
-      },
+      grid: { drawOnChartArea: false },
       ticks: {
-        callback: (value) =>
-          Number(value).toLocaleString('vi-VN'),
-      },
-      title: {
-        display: true,
-        text: 'Doanh thu (VNĐ)',
+        color: '#1890ff',
+        callback: (value) => {
+          if (value >= 1000000000) return (value / 1000000000).toFixed(1) + ' tỷ';
+          if (value >= 1000000) return (value / 1000000).toFixed(0) + ' triệu';
+          return value.toLocaleString('vi-VN') + ' đ';
+        },
       },
     },
   },
@@ -120,19 +125,24 @@ const lineData = {
     {
       label: "Đơn hàng",
       data: (sales ?? []).map((item) => item.sales),
-      borderColor: "#00bcd4",
-      backgroundColor: "rgba(0,188,212,0.15)",
-      tension: 0.4,
-      fill: true,
+      borderColor: "#ff4d4f",      // Màu đỏ (Danger/Hot)
+      backgroundColor: "#ff4d4f",
+      borderWidth: 3,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      tension: 0.3,
       yAxisID: 'ySales',
+      fill: false,                 // Giữ dạng đường mảnh để không đè lên doanh thu
     },
     {
       label: "Doanh thu",
       data: (sales ?? []).map((item) => item.revenue),
-      borderColor: "#3f51b5",
-      backgroundColor: "rgba(63,81,181,0.15)",
+      borderColor: "#1890ff",      // Màu xanh Blue (Trust/Primary)
+      backgroundColor: "rgba(24, 144, 255, 0.1)", // Hiệu ứng đổ bóng nhẹ phía dưới
+      borderWidth: 2,
+      pointRadius: 0,              // Ẩn điểm nút để nhìn mượt hơn
       tension: 0.4,
-      fill: true,
+      fill: true,                  // Tạo vùng màu để phân biệt với đường đơn hàng
       yAxisID: 'yRevenue', 
     },
   ],
@@ -149,45 +159,110 @@ const doughnutData = {
   ],
 };
 
-const productColumns = [
-    {
-      title: 'Tên sản phẩm',
-      dataIndex: 'product',
-      key: 'product',
-      render: (text) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Avatar size="small">{text.charAt(0)}</Avatar>
-          <span>{text}</span>
-        </div>
-      ),
-    },
-    {
-      title: 'Số lượng đã bán',
-      dataIndex: 'sales',
-      key: 'sales',
-      align: 'center',
-    },
-    {
-      title: 'Doanh thu',
-      dataIndex: 'revenue',
-      key: 'revenue',
-      align: 'right',
-      render: (value) =>
-      Number(value).toLocaleString("en-US")  // 👈 format
-    },
-    {
-      title: 'Tình trạng',
-      dataIndex: 'status',
-      key: 'status',
-      align: 'center',
-      render: (status) => {
-        let color = 'green';
-        if (status === 'Low Stock') color = 'orange';
-        if (status === 'Out of Stock') color = 'red';
-        return <Tag color={color}>{status}</Tag>;
+const doughnutOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    // Kích hoạt plugin cục bộ ở đây
+    datalabels: {
+      display: true,
+      color: '#fff',
+      formatter: (value, ctx) => {
+        const datasets = ctx.chart.data.datasets;
+        if (datasets.indexOf(ctx.dataset) === datasets.length - 1) {
+          const sum = datasets[0].data.reduce((a, b) => a + b, 0);
+          const percentage = ((value / sum) * 100).toFixed(1) + "%";
+          return percentage;
+        }
+        return null;
       },
     },
-  ];
+    legend: {
+      position: 'bottom',
+      labels: {
+        usePointStyle: true,
+        padding: 15,
+        // Thủ thuật để chia cột: giới hạn chiều rộng của box label
+        boxWidth: 10,
+      },
+    },
+  },
+};
+
+const productColumns = [
+  {
+    title: 'STT',
+    key: 'index',
+    width: 60,
+    align: 'center',
+    render: (text, record, index) => {
+      // Mảng màu sắc cho 5 vị trí đầu tiên
+      const colors = ['#ff4d4f', '#faad14', '#52c41a', '#1890ff', '#722ed1'];
+      return (
+        <Avatar 
+          size="small" 
+          style={{ 
+            backgroundColor: colors[index] || '#bfbfbf',
+            fontWeight: 'bold' 
+          }}
+        >
+          {index + 1}
+        </Avatar>
+      );
+    },
+  },
+  {
+    title: 'Tên sản phẩm',
+    dataIndex: 'product',
+    key: 'product',
+    render: (text) => <span>{text}</span>, // Bỏ Avatar cũ ở đây
+  },
+  {
+    title: 'Số lượng đã bán',
+    dataIndex: 'sales',
+    key: 'sales',
+    align: 'center',
+    render: (sales) => (
+      <div style={{ width: '100%' }}>
+        <div style={{ marginBottom: 4 }}>{sales.toLocaleString()}</div>
+        {/* Thanh tiến độ để giao diện đẹp hơn */}
+        <div style={{ 
+          height: 4, 
+          width: '100%', 
+          backgroundColor: '#f5f5f5', 
+          borderRadius: 2 
+        }}>
+          <div style={{ 
+            height: '100%', 
+            width: `${Math.min((sales / 1000) * 100, 100)}%`, 
+            backgroundColor: '#52c41a', 
+            borderRadius: 2 
+          }} />
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: 'Doanh thu',
+    dataIndex: 'revenue',
+    key: 'revenue',
+    align: 'right',
+    render: (value) =>
+      new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)
+  },
+  {
+    title: 'Tình trạng',
+    dataIndex: 'status',
+    key: 'status',
+    align: 'center',
+    render: (status) => {
+      let color = 'green';
+      if (status === 'Low Stock') color = 'orange';
+      if (status === 'Out of Stock') color = 'red';
+      return <Tag color={color} style={{ borderRadius: 10 }}>{status}</Tag>;
+    },
+  },
+];
 
   return (
     <div className="dashboard-wrapper">
@@ -196,36 +271,24 @@ const productColumns = [
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card className="stat-card stat-card-green">
             <Statistic title="DOANH THU" value={stats?.revenue?.toLocaleString('vi-VN')} suffix="VNĐ" />
-            <div className="stat-footer">
-              <Text type="success">↑ 12.5%</Text>
-            </div>
           </Card>
         </Col>
 
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card className="stat-card stat-card-purple">
             <Statistic title="ĐƠN HÀNG" value={stats?.sales?.toLocaleString('vi-VN')} />
-            <div className="stat-footer">
-              <Text type="success">↑ 8.2%</Text>
-            </div>
           </Card>
         </Col>
 
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card className="stat-card stat-card-orange">
             <Statistic title="GIÁ TRỊ TRUNG BÌNH ĐƠN (AOV)" value={Math.round(aov).toLocaleString('vi-VN')} suffix="VNĐ"/>
-            <div className="stat-footer">
-              <Text type="danger">↓ 2.1%</Text>
-            </div>
           </Card>
         </Col>
 
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card className="stat-card stat-card-blue">
             <Statistic title="KHÁCH HÀNG" value={stats.customers} precision={0} />
-            <div className="stat-footer">
-              <Text type="success">↑ 5.7%</Text>
-            </div>
           </Card>
         </Col>
       </Row>
@@ -233,17 +296,20 @@ const productColumns = [
       {/* charts row */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={16}>
-          <Card title="Tổng quan bán hàng">
-            <div style={{ width: '100%', height: 300 }}>
+          <Card title="Tổng quan bán hàng trong 12 tháng qua">
+            <div style={{ width: '100%', height: 350 }}>
               <Line options={lineOptions} data={lineData} />
             </div>
           </Card>
         </Col>
 
         <Col xs={24} lg={8}>
-          <Card title="Nguồn truy cập">
-            <div style={{ width: '100%', height: 260 }}>
-              <Doughnut data={doughnutData} options={doughnutData.labels} />
+          <Card title="Doanh thu theo danh mục" className="category-card">
+            <div style={{ width: '100%', height: 350, position: 'relative' }}>
+              <Doughnut 
+                data={doughnutData} 
+                options={doughnutOptions} 
+              />
             </div>
           </Card>
         </Col>
@@ -256,26 +322,39 @@ const productColumns = [
             <List
               itemLayout="horizontal"
               dataSource={activities ?? []}
-              renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar style={{ backgroundColor: '#1890ff' }}>
-                        {item.title.charAt(0)}
-                      </Avatar>
-                    }
-                    title={item.title}
-                    description={
-                      <>
-                        <div>{item.description}</div>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {item.time}
-                        </Text>
-                      </>
-                    }
-                  />
-                </List.Item>
-              )}
+              renderItem={(item) => {
+                // Logic xác định Icon và màu sắc dựa trên tiêu đề
+                const isOrder = item.title.includes("Đơn hàng");
+                const isCustomer = item.title.includes("Khách hàng");
+
+                return (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar 
+                          style={{ 
+                            backgroundColor: isOrder ? '#e6f7ff' : (isCustomer ? '#f6ffed' : '#f5f5f5'),
+                            color: isOrder ? '#1890ff' : (isCustomer ? '#52c41a' : '#bfbfbf'),
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          icon={isOrder ? <ShoppingCartOutlined /> : (isCustomer ? <UserAddOutlined /> : <HistoryOutlined />)}
+                        />
+                      }
+                      title={<Text strong>{item.title}</Text>}
+                      description={
+                        <>
+                          <div>{item.description}</div>
+                          <Text type="secondary" style={{ fontSize: 11 }}>
+                            {item.time}
+                          </Text>
+                        </>
+                      }
+                    />
+                  </List.Item>
+                );
+              }}
             />
           </Card>
         </Col>
