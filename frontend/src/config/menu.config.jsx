@@ -1,27 +1,25 @@
 import {
   DashboardOutlined,
   ProductOutlined,
-  TableOutlined,
-  FileTextOutlined,
   FormOutlined,
   UserOutlined,
-  SearchOutlined,
+  LogoutOutlined,
+  TeamOutlined,
+  BoxPlotOutlined,
+  UnorderedListOutlined,
+  TagsOutlined,
+  ImportOutlined,
+  ShoppingCartOutlined,
 } from '@ant-design/icons';
 
 import { Link } from "react-router-dom";
 
 export const MENU_ITEMS = [
   {
-  key: 'checkout',
-  label: <Link to="/checkout">Bán hàng</Link>,
-  icon: <SearchOutlined />,
-  path: '/checkout',
-  },
-  {
-    key: '/',
+    key: '/dashboard',
     icon: <DashboardOutlined />,
     label: 'Dashboard',
-    path: '/',
+    path: '/dashboard',
   },
   {
     key: 'product-management',
@@ -30,25 +28,25 @@ export const MENU_ITEMS = [
     children: [
       {
         key: '/products',
-        icon: <ProductOutlined />,
+        icon: <BoxPlotOutlined />,
         label: 'Sản phẩm',
         path: '/products',
       },
       {
         key: '/categories',
-        icon: <TableOutlined />,
+        icon: <UnorderedListOutlined />,
         label: 'Danh mục',
         path: '/categories',
       },
       {
         key: '/brands',
-        icon: <TableOutlined />,
+        icon: <TagsOutlined />,
         label: 'Thương hiệu',
         path: '/brands',
       },
       {
         key: '/receipts',
-        icon: <FileTextOutlined />,
+        icon: <ImportOutlined />,
         label: 'Nhập kho',
         path: '/receipts',
       },
@@ -68,8 +66,28 @@ export const MENU_ITEMS = [
   },
   {
     key: '/customers',
-    icon: <UserOutlined />,
+    icon: <TeamOutlined />,
     label: 'Khách hàng',
     path: '/customers',
+  },
+    {
+    key: 'checkout',
+    label: <Link to="/checkout">Bán hàng</Link>,
+    icon: <ShoppingCartOutlined />,
+    path: '/checkout',
+  },
+];
+
+export const MENU_USERS = [
+  {
+    key: 'profile',
+    label: 'Thông tin cá nhân',
+    icon: <UserOutlined />,
+  },
+  {
+    key: 'logout',
+    label: 'Đăng xuất',
+    icon: <LogoutOutlined />,
+    danger: true,
   },
 ];

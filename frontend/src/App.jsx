@@ -29,13 +29,15 @@ import CheckoutPage from "./pages/CheckoutPage";
 
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import RequireAuth from "./components/RequireAuth";
 
 import ChatWidget from "./components/chat/ChatbotWidget";
 
 import { getDashboardOverview } from './services/dashboardApi';
 
-import { MENU_ITEMS } from './config/menu.config';
+import { MENU_ITEMS, MENU_USERS } from './config/menu.config';
 import { getOpenKeysFromPath } from './utils/menu.helper';
+import { logout, getUserFromToken } from "./services/authService";
 
 const openKeys = getOpenKeysFromPath(location.pathname);
   
@@ -51,6 +53,8 @@ const App = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
 
+  const [user, setUser] = useState(null);
+
   const fetchDashboard = async () => {
     try {
       setLoadingDashboard(true);
@@ -63,37 +67,68 @@ const App = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    setUser(null); // Xóa user trong state để App biết đã đăng xuất
+    navigate("/login", { replace: true });
+  };
+
+  const handleMenuClick = ({ key }) => {
+    if (key === "logout") {
+      handleLogout();
+      return;
+    }
+    navigate(key);
+  };
+
   useEffect(() => {
-    fetchDashboard();
-  }, []);
+    const user_tk = getUserFromToken(); // Lấy user từ token trước
+    if (!user_tk) {
+      navigate("/login", { replace: true });
+    } else {
+      setUser(user_tk); // Chỉ set user nếu có token hợp lệ
+    }
+  }, [navigate, location.pathname]);
 
   const notifications = dashboardData?.recent_activities || [];
-
+  
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        collapsible
-        collapsed={collapsed}
-        trigger={null}
-        width={230}
-        style={{ background: '#1f2533' }}
-      >
-        <div className="logo">
-          <div className="logo-icon">E</div>
-          {!collapsed && <span className="logo-text">HY-ShopAdmin</span>}
-        </div>
+    <>
+  <Routes>
+    {/* PUBLIC ROUTES */}
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/register" element={<RegisterPage />} />
 
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          defaultOpenKeys={openKeys}
-          items={MENU_ITEMS}
-          onClick={({ key }) => {
-            if (key.startsWith('/')) navigate(key);
-          }}
-        />
-      </Sider>
+    {/* PROTECTED APP */}
+    <Route
+      path="/*"
+      element={
+        <RequireAuth>
+          <Layout style={{ minHeight: '100vh' }}>
+            {/* ==== SIDEBAR ==== */}
+            <Sider
+              collapsible
+              collapsed={collapsed}
+              trigger={null}
+              width={230}
+              style={{ background: '#1f2533' }}
+            >
+              <div className="logo">
+                <div className="logo-icon">E</div>
+                {!collapsed && <span className="logo-text">HY-ShopAdmin</span>}
+              </div>
+
+              <Menu
+                theme="dark"
+                mode="inline"
+                selectedKeys={[location.pathname]}
+                defaultOpenKeys={openKeys}
+                items={MENU_ITEMS}
+                onClick={({ key }) => key.startsWith('/') && navigate(key)}
+              />
+            </Sider>
+
+            {/* ==== MAIN ==== */}
 
       <Layout>
         <Header className="header">
@@ -138,34 +173,54 @@ const App = () => {
           </Dropdown>
 
             <Dropdown
-              menu={{ items: MENU_ITEMS }}
+              menu={{ 
+                items: MENU_USERS,
+                onClick: handleMenuClick
+              }}
               placement="bottomRight"
             >
               <div className="header-user">
                 <Avatar size="small" icon={<UserOutlined />} />
-                <span className="header-username">Admin</span>
+                <span className="header-username" style={{ marginLeft: 8 }}>{user?.username || "User"}</span>
               </div>
             </Dropdown>
           </div>
         </Header>
 
         <Content className="content">
-          <Routes>
-            <Route path="/" element={<DashboardPage dashboardData={dashboardData} loading={loadingDashboard} />} />
-            <Route path="/products" element={<ProductsPage />} />
-            <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/brands" element={<BrandsPage />} />
-            <Route path="/receipts" element={<ReceiptsPage />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/customers" element={<CustomersPage />} />
-            <Route path="/checkout" element={<CheckoutPage onDashboardRefresh={fetchDashboard}/>} />
-          </Routes>
-        </Content>
-      </Layout>
-      <ChatWidget />
-    </Layout>
-  );
-};
+                <Routes>
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <DashboardPage
+                        dashboardData={dashboardData}
+                        loading={loadingDashboard}
+                      />
+                    }
+                  />
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/categories" element={<CategoriesPage />} />
+                  <Route path="/brands" element={<BrandsPage />} />
+                  <Route path="/receipts" element={<ReceiptsPage />} />
+                  <Route path="/orders" element={<OrdersPage />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/customers" element={<CustomersPage />} />
+                  <Route
+                    path="/checkout"
+                    element={<CheckoutPage onDashboardRefresh={fetchDashboard} />}
+                  />
+                </Routes>
+              </Content>
+            </Layout>
+
+          </Layout>
+        </RequireAuth>
+      }
+    />
+  </Routes>
+        <ChatWidget />
+        </>
+);
+}
 
 export default App;

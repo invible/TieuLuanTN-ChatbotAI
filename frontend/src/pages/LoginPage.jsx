@@ -1,5 +1,5 @@
 // src/pages/LoginPage.jsx
-import { Form, Input, Button, Checkbox } from "antd";
+import { Form, Input, Button, Checkbox, App } from "antd";
 import {
   MailOutlined,
   LockOutlined,
@@ -7,18 +7,37 @@ import {
   FacebookOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
+import { login, logout, isLoggedIn } from "../services/authService";
+import api from "../services/http";
+
+import '../styles/login.css';
 
 const LoginPage = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const { message } = App.useApp();
 
-  const handleFinish = async (values) => {
-    // TODO: gọi API đăng nhập thật sự ở đây
-    // ví dụ: await authLogin(values.email, values.password)
-    console.log("Login values:", values);
-    // demo: sau khi login xong chuyển về dashboard
-    navigate("/");
-  };
+const handleFinish = async (values) => {
+  try {
+    const res = await login(values.email, values.password);
+
+    const access_token = res.data?.access_token || res.access_token;
+
+    if (!access_token) {
+      message.error("Không nhận được token từ máy chủ");
+      return;
+    }
+
+    localStorage.setItem("access_token", access_token);
+
+    message.success("Đăng nhập thành công");
+    navigate("/dashboard", { replace: true });
+
+  } catch (err) {
+    console.error("Login Error:", err.response?.data);
+    message.error(err.response?.data?.detail || "Sai email hoặc mật khẩu");
+  }
+};
 
   return (
     <div className="auth-page">
@@ -29,13 +48,13 @@ const LoginPage = () => {
             {/* icon đơn giản */}
             <i className="fa fa-layer-group" />
           </div>
-          <div className="auth-logo-title">ElaAdmin</div>
+          <div className="auth-logo-title">Hoàng Yến Shop</div>
         </div>
 
         {/* Title */}
-        <div className="auth-title">Welcome Back!</div>
+        <div className="auth-title">Admin Dashboard</div>
         <div className="auth-subtitle">
-          Please sign in to your account
+          Vui lòng đăng nhập để tiếp tục
         </div>
 
         {/* Form */}
@@ -46,17 +65,17 @@ const LoginPage = () => {
           requiredMark={false}
         >
           <Form.Item
-            label={<span className="auth-label">EMAIL ADDRESS</span>}
+            label={<span className="auth-label">EMAIL</span>}
             name="email"
             rules={[
-              { required: true, message: "Please enter your email" },
-              { type: "email", message: "Email is not valid" },
+              { required: true, message: "Vui lòng nhập đúng email" },
+              { type: "email", message: "Email không hợp lệ" },
             ]}
           >
             <Input
               size="large"
               prefix={<MailOutlined style={{ color: "#9fb3c8" }} />}
-              placeholder="Enter your email"
+              placeholder="Nhập địa chỉ email của bạn"
             />
           </Form.Item>
 
@@ -64,22 +83,22 @@ const LoginPage = () => {
             label={<span className="auth-label">PASSWORD</span>}
             name="password"
             rules={[
-              { required: true, message: "Please enter your password" },
+              { required: true, message: "Vui lòng nhập đúng mật khẩu" },
             ]}
           >
             <Input.Password
               size="large"
               prefix={<LockOutlined style={{ color: "#9fb3c8" }} />}
-              placeholder="Enter your password"
+              placeholder="Nhập mật khẩu của bạn"
             />
           </Form.Item>
 
           <div className="auth-checkbox-row" style={{ marginBottom: 12 }}>
             <Form.Item name="remember" valuePropName="checked" noStyle>
-              <Checkbox>Remember me</Checkbox>
+              <Checkbox>Ghi nhớ đăng nhập</Checkbox>
             </Form.Item>
             <a href="#!" style={{ fontSize: 13 }}>
-              Forgot Password?
+              Quên mật khẩu?
             </a>
           </div>
 
@@ -92,14 +111,14 @@ const LoginPage = () => {
               style={{ borderRadius: 6 }}
             >
               <i className="fa fa-sign-in" style={{ marginRight: 6 }} />
-              Sign In
+              ĐĂNG NHẬP
             </Button>
           </Form.Item>
         </Form>
 
         {/* Social login */}
         <div className="auth-divider">
-          <span>or continue with</span>
+          <span>hoặc tiếp tục với</span>
         </div>
 
         <div className="auth-social-row">
@@ -117,8 +136,8 @@ const LoginPage = () => {
         </div>
 
         <div className="auth-footer-text">
-          Don&apos;t have an account?{" "}
-          <Link to="/register">Create one here</Link>
+          Bạn chưa có tài khoản?{" "}
+          <Link to="/register">Nhấn vào để đăng ký</Link>
         </div>
       </div>
     </div>

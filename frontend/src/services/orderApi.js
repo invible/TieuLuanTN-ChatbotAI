@@ -1,4 +1,4 @@
-import { api } from "./http";
+import api from "./http";
 
 export const listOrders = () => api.get("/orders");
 export const createOrder = (data) => api.post("/orders", data);

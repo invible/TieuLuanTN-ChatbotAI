@@ -45,20 +45,24 @@ class UserOut(UserBase):
 # ======================
 #  LOGINS
 # ======================
-class LoginBase(BaseModel):
+# class LoginBase(BaseModel):
+#     email: EmailStr
+#     password: str
+
+# class LoginResponse(BaseModel):
+#     id: int
+#     username: str
+#     email: EmailStr
+#     role: str
+#     access_token: str | None = None   # nếu sau này dùng JWT
+#     token_type: str = "bearer"
+
+# class LoginRequest(LoginBase):
+#     pass
+
+class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-
-class LoginResponse(BaseModel):
-    id: int
-    username: str
-    email: EmailStr
-    role: str
-    access_token: str | None = None   # nếu sau này dùng JWT
-    token_type: str = "bearer"
-
-class LoginRequest(LoginBase):
-    pass
 
 # ======================
 #  PRODUCTS

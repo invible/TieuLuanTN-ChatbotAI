@@ -1,29 +1,45 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app import models, schemas
+from app.utils.auth import verify_password, create_access_token
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@router.post("/login", response_model=schemas.LoginResponse)
+
+@router.post("/login",status_code=status.HTTP_200_OK)
 def login(data: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = (
         db.query(models.User)
-        .filter(
-            models.User.email == data.email,
-            models.User.password == data.password,  # TODO: hash
-        )
+        .filter(models.User.email == data.email)
         .first()
     )
-    if not user:
-        raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không đúng")
 
-    # có thể trả về info cơ bản, chưa cần JWT
-    return schemas.LoginResponse(
-        id=user.id,
-        ten_user=user.username,
-        email=user.email,
-        role=user.role,
-        token=None, # cập nhật nếu dùng JWT
-    )
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sai tài khoản hoặc mật khẩu"
+        )
+
+    if not verify_password(data.password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sai tài khoản hoặc mật khẩu"
+        )
+
+    access_token = create_access_token({
+        "sub": user.email,
+        "user_id": user.id,
+        "username": user.username
+    })
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username
+        }
+    }

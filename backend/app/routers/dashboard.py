@@ -3,15 +3,16 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from app.utils.auth import get_current_user
 
 from app.db import get_db
 from app import models, schemas
 
-router = APIRouter(tags=["Dashboard"])
+router = APIRouter(prefix="/dashboard",tags=["Dashboard"])
 
 
-@router.get("/dashboard", response_model=schemas.DashboardOverview)
-def get_dashboard_overview(db: Session = Depends(get_db)):
+@router.get("/", response_model=schemas.DashboardOverview)
+def get_dashboard_overview(current_user=Depends(get_current_user),db: Session = Depends(get_db)):
     # Xác định mốc thời gian 12 tháng trước
     one_year_ago = datetime.now() - timedelta(days=365)
 

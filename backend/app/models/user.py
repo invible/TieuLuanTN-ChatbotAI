@@ -13,7 +13,7 @@ class User(Base):
     phone = Column(String(15), nullable=False)
 
     email = Column(String(50), unique=True, nullable=False)
-    password = Column(String(40), nullable=False)
+    password = Column(String(100), nullable=False)
     role = Column(String(40), nullable=False)
     status = Column(String(40), default="active")
     # password_hash = Column(String(255), nullable=False)
