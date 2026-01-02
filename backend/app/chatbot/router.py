@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from typing import Optional, List
 
 from .vanna_flow import (
-    initialize_flow,
     get_vanna_flow,
     VannaChatFlow,
     ResponseStatus,
@@ -87,16 +86,16 @@ async def ask_question(
         )
 
 
-@router.post("/admin/retrain")
-def admin_retrain():
-    """
-    Gọi lại initialize_flow để retrain:
-    - Khi thay đổi schema DB
-    - Khi cập nhật seed/qa_seed.json
-    - Khi vừa bật lại Ollama
-    """
-    try:
-        initialize_flow()
-        return {"ok": True, "msg": "Retrain done."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @router.post("/admin/retrain")
+# def admin_retrain():
+#     """
+#     Gọi lại initialize_flow để retrain:
+#     - Khi thay đổi schema DB
+#     - Khi cập nhật seed/qa_seed.json
+#     - Khi vừa bật lại Ollama
+#     """
+#     try:
+#         initialize_flow()
+#         return {"ok": True, "msg": "Retrain done."}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))

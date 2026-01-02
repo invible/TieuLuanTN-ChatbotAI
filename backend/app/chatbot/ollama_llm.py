@@ -1,14 +1,7 @@
 import os
 import time
 from typing import List, Dict, Optional
-
-try:
-    import ollama  # pip install ollama
-except ImportError as e:
-    raise ImportError(
-        "Chưa cài thư viện 'ollama'. Hãy chạy: pip install ollama"
-    ) from e
-
+import ollama
 
 class OllamaConfig:
     """

@@ -6,14 +6,7 @@ import pymysql
 
 from .config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, TABLES
 
-try:
-    # Vanna Hosted (Cloud) client
-    from vanna.remote import VannaDefault
-except Exception as e:
-    VannaDefault = None
-    _vanna_import_error = e
-else:
-    _vanna_import_error = None
+from vanna.remote import VannaDefault
 
 
 class VannaCloudClient:
@@ -24,27 +17,18 @@ class VannaCloudClient:
     - Keep DB execution local (you already do this in VannaChatFlow.run_sql).
     """
 
-    def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None) -> None:
-        if VannaDefault is None:
-            raise ImportError(
-                "Không import được 'from vanna.remote import VannaDefault'. " 
-                "Hãy kiểm tra version thư viện vanna (khuyến nghị cài 'pip install -U vanna')."
-            ) from _vanna_import_error
-
-        self.model = model or os.getenv("VANNA_MODEL")
-        self.api_key = api_key or os.getenv("VANNA_API_KEY")
-
-        if not self.model or not self.api_key:
-            raise ValueError(
-                "Thiếu cấu hình VANNA_MODEL hoặc VANNA_API_KEY (trong .env). "
-                "Bạn có thể lấy ở trang profile/account của Vanna."
-            )
+    def __init__(self):
+        # if VannaDefault is None:
+        #     raise ImportError(
+        #         "Không import được 'from vanna.remote import VannaDefault'. " 
+        #         "Hãy kiểm tra version thư viện vanna (khuyến nghị cài 'pip install -U vanna')."
+        #     ) from _vanna_import_error
 
         # Cloud model instance
-        self.vn = VannaDefault(model=self.model, api_key=self.api_key)
+        self.vn = VannaDefault(model='chatbot_vanna', api_key='ed2715408f2a4de28eac1999d8c7221c')
 
-        # local lock to avoid re-train schema every server restart
-        self._schema_lock_path = os.getenv("VANNA_SCHEMA_LOCK", ".vanna_schema.lock")
+        # # local lock to avoid re-train schema every server restart
+        # self._schema_lock_path = os.getenv("VANNA_SCHEMA_LOCK", ".vanna_schema.lock")
 
     # --------------------- MySQL schema helpers --------------------- #
     def _mysql_conn(self):

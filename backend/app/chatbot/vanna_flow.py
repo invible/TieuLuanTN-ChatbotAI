@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 
 # from vanna.remote import VannaDefault
 from app.chatbot.vanna_client import MyVanna
+from .vanna_cloud_client import VannaCloudClient
 
 from .config import (
     DB_HOST,
@@ -102,10 +103,10 @@ def heuristic_question_type(question: str) -> Optional[QuestionType]:
     return None
 
 class VannaChatFlow:
-    def __init__(self, vn: MyVanna):
+    def __init__(self, vn: VannaCloudClient):
         self.question_classifier_prompt = get_question_classifier_prompt()
-        self.additional_summary_prompt = get_additional_summary_prompt()
-        self.additional_sql_prompt = get_additional_sql_prompt()
+        # self.additional_summary_prompt = get_additional_summary_prompt()
+        # self.additional_sql_prompt = get_additional_sql_prompt()
 
         # ✅ Engine local để đọc schema + execute SQL
         self.engine = create_engine(
@@ -242,36 +243,57 @@ class VannaChatFlow:
 
 
     def _generate_sql(self, question: str, **kwargs) -> str:
-        try:
+        # try:
             # Lấy schema tinh gọn để nạp vào prompt (tránh quá tải token)
-            schema_hint = self._build_schema_hint(question) 
+            # schema_hint = self._build_schema_hint(question) 
             
-            prompt = f"""
-            Bạn là chuyên gia MySQL 8.0. 
-            Schema: {schema_hint}
-            Nhiệm vụ: Chuyển câu hỏi sau thành SQL.
-            Quy tắc: 
-            - CHỈ trả về câu lệnh SQL SELECT.
-            - KHÔNG giải thích, KHÔNG dùng markdown.
-            Câu hỏi: {question}
-            SQL:"""
+            # prompt = f"""
+            # Bạn là chuyên gia MySQL 8.0. 
+            # Schema: {schema_hint}
+            # Nhiệm vụ: Chuyển câu hỏi sau thành SQL.
+            # Quy tắc: 
+            # - CHỈ trả về câu lệnh SQL SELECT.
+            # - KHÔNG giải thích, KHÔNG dùng markdown.
+            # Câu hỏi: {question}
+            # SQL:"""
+    #         prompt = get_additional_sql_prompt()
 
-            # Gọi Model (2) chuyên sinh SQL
-            llm = get_ollama_llm()
-            # Sử dụng hàm chat thông thường thay vì vn.generate_sql nếu muốn kiểm soát hoàn toàn prompt
-            raw_sql = llm._chat(
-                model=llm.config.general_model, 
-                messages=[{"role": "user", "content": prompt}],
-                num_predict=llm.config.max_tokens_general,
-            )
+    #         # Gọi Model (2) chuyên sinh SQL
+    #         llm = get_ollama_llm()
+    #         # Sử dụng hàm chat thông thường thay vì vn.generate_sql nếu muốn kiểm soát hoàn toàn prompt
+    #         raw_sql = llm._chat(
+    #             model=llm.config.summary_model, 
+    #             messages=[{"role": "user", "content": prompt}],
+    #             num_predict=llm.config.max_tokens_summary,
+    #         )
             
-            return self._cleanup_sql(raw_sql)
-        except Exception as e:
-            print("--- DEBUG TRACEBACK ---")
-            traceback.print_exc() # Dòng này sẽ in ra chính xác lỗi nằm ở file nào, dòng nào
-            raise e
+    #         return self._cleanup_sql(raw_sql)
+    #     except Exception as e:
+    #         print("--- DEBUG TRACEBACK ---")
+    #         traceback.print_exc() # Dòng này sẽ in ra chính xác lỗi nằm ở file nào, dòng nào
+    #         raise e
     
-    _schema_hint_cache: Optional[str] = None
+    # _schema_hint_cache: Optional[str] = None
+        sql = None
+        try:
+        # VannaCloud sẽ tự động tìm kiếm ngữ cảnh từ training data (RAG)
+        # và sinh SQL dựa trên model bạn đã cấu hình trên Vanna.ai
+        # vn ở đây là instance của Vanna (ví dụ: vn = VannaDefault(model='your-model', api_key='your-key'))
+        
+        # Chúng ta sử dụng generate_sql trực tiếp từ vanna
+            sql = self.vn.generate_sql(question=question)
+        
+        # Nếu cần dọn dẹp (xóa dấu ; hoặc code block ```sql)
+            if hasattr(self, '_cleanup_sql'):
+                return self._cleanup_sql(sql)
+                
+            return sql
+
+        except Exception as e:
+            print("--- DEBUG TRACEBACK VANNACLOUD ---")
+            import traceback
+            traceback.print_exc()
+            raise e
 
     def _pick_tables_for_question(self, question: str, all_tables: list[str]) -> list[str]:
         q = (question or "").lower()
@@ -369,6 +391,7 @@ class VannaChatFlow:
 
         try:
             clean_sql = sql.strip().rstrip(";")
+            print("[SQL query]\n", clean_sql)
 
             if not self.validate_sql(clean_sql):
                 raise Exception("Câu lệnh SQL bị chặn vì không an toàn.")
@@ -388,54 +411,72 @@ class VannaChatFlow:
         except Exception as e:
             raise Exception(f"Thực thi SQL thất bại: {str(e)}")
 
+    def _df_to_text_table(df: pd.DataFrame) -> str:
+        lines = []
+        for idx, row in df.iterrows():
+            lines.append(
+                f"{idx + 1}. {row['name']} – {row['total_qty']} sản phẩm"
+            )
+        return "\n".join(lines)
+
     # 4.6 Tóm tắt kết quả DataFrame bằng tiếng Việt
-    def generate_answer(self, question: str, df: pd.DataFrame) -> str:
+    def generate_answer(self, question: str, df: pd.DataFrame, **kwargs) -> str:
         """
         Tóm tắt kết quả truy vấn SQL bằng Ollama LLM.
-        Chỉ gửi một lượng dữ liệu JSON vừa phải lên model.
         """
-        llm = get_ollama_llm()
-        system_prompt = get_additional_summary_prompt()
+        try:
+            llm = get_ollama_llm()
 
-        # # Nếu không có dữ liệu
-        # if df is None or df.empty:
-        #     data_json = "[]"
-        # else:
-        #     # Giảm số dòng gửi lên để tránh prompt quá dài, ví dụ max 50 dòng
-        #     df_to_send = df.head(10)
-        #     data_json = df_to_send.to_json(orient="records", force_ascii=False)
+            # 1. Làm sạch dữ liệu để tránh quá tải Token
+            # Loại bỏ các cột không cần thiết cho việc đọc hiểu
+            blacklist = ['description', 'image_url', 'created_at', 'brand_id', 'password']
+            
+            # Chuyển DataFrame thành JSON để LLM đọc
+            data_json = df.head(10).to_json(orient="records", indent=2, force_ascii=False)
 
-        # answer = llm.summarize_answer(
-        #     system_prompt=system_prompt,
-        #     question=question,
-        #     data_json=data_json,
-        # )
-        # 1. Gọt giũa dữ liệu (Chỉ lấy cột cần thiết để tiết kiệm token)
-        # Loại bỏ các cột rác đã nói ở bước trước
-        blacklist = ['description', 'image_url', 'created_at', 'brand_id']
-        clean_df = df.drop(columns=[c for c in blacklist if c in df.columns]).head(5)
-        
-        data_json = clean_df.to_json(orient='records', force_ascii=False)
+            # 2. Xây dựng Prompt cho LLM
+            user_content = f"""
+            Tổng hợp dữ liệu từ database để trả lời câu hỏi
+            """
 
-        # 2. Tạo nội dung yêu cầu (User Prompt) rõ ràng
-        user_content = f"""
-    Hãy trả lời câu hỏi sau dựa trên dữ liệu thực tế.
+            system_prompt = f"""
+            Bạn là trợ lý báo cáo bán hàng.
 
-    CÂU HỎI: {question}
-    DỮ LIỆU JSON TỪ HỆ THỐNG: {data_json}
+            Dưới đây là kết quả truy vấn dữ liệu, đã được xử lý chính xác.
 
-    TRẢ LỜI:"""
+            YÊU CẦU:
+            - Dựa trên câu hỏi và dữ liệu được cung cấp hãy trả lời ngắn gọn, chính xác, lịch sự bằng Tiếng Việt.
+            - Nếu dữ câu hỏi về doanh thu hoặc giá tiền, hãy trả lời bằng đơn vị "VNĐ".
+            - Với dữ liệu chỉ có một giá trị, hãy trả lời dưới dạng câu hoàn chỉnh.
+            - Với dữ liệu bảng nhiều dòng, hãy liệt kê bằng cách gạch đầu dòng.
+            - Chỉ sử dụng đúng dữ liệu được cung cấp, không suy đoán, không thêm thông tin.
+            - Không nhắc đến SQL, hệ thống hay AI.
 
-        # 3. Gọi model tóm tắt
-        return llm._chat(
-            model=llm.config.summary_model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_content}
-            ],
-            num_predict=200 # Giới hạn độ dài để tránh model lảm nhảm
-        )
-        return answer
+            CÂU HỎI:
+            {question}
+
+            DỮ LIỆU:
+            {data_json}
+
+            TRẢ LỜI:
+            """.strip()
+
+            # 3. Gọi model tóm tắt (Sử dụng đúng method của OllamaLlm bạn đã viết)
+            answer = llm._chat(
+                model=llm.config.summary_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_content}
+                ],
+                num_predict=400, # Tăng nhẹ để trả lời được danh sách dài hơn
+                temperature=0.1,
+            )
+            
+            return answer
+
+        except Exception as e:
+            print(f"❌ Lỗi trong generate_answer: {e}")
+            return f"Tôi đã tìm thấy dữ liệu nhưng gặp lỗi khi tóm tắt: {str(e)}. Bạn có thể xem bảng dữ liệu đính kèm."
 
     # 4.7 Flow tổng hợp: nhận câu hỏi từ user và trả về QuestionResponse
     def ask_question(
@@ -605,7 +646,7 @@ def initialize_flow(qa_seed_path: str = "seed/qa_seed.json"):
 
     global _vanna_flow
     if _vanna_flow is None:
-        vn = MyVanna()
+        vn = VannaCloudClient()
         _vanna_flow = VannaChatFlow(vn=vn)
 
 def get_vanna_flow() -> VannaChatFlow:

@@ -1,70 +1,13 @@
-import pymysql
+import vanna
+from vanna.remote import VannaDefault
 import os
-from app.chatbot.vanna_client import MyVanna  # Đảm bảo đường dẫn import đúng
-from app.chatbot.config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 
-def get_all_table_ddl():
-    """Kết nối DB và lấy câu lệnh CREATE TABLE của từng bảng"""
-    connection = pymysql.connect(
-        host=DB_HOST,
-        port=int(DB_PORT),
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME,
-        charset='utf8mb4',
-        cursorclass=pymysql.cursors.DictCursor
-    )
-    
-    tables_ddl = []
-    try:
-        with connection.cursor() as cursor:
-            # 1. Lấy danh sách tất cả các bảng trong database
-            cursor.execute("SHOW TABLES")
-            tables = cursor.fetchall()
-            
-            for table_dict in tables:
-                table_name = list(table_dict.values())[0]
-                
-                # Bỏ qua các bảng không cần thiết (ví dụ bảng log, bảng tạm)
-                if table_name.lower() in ['migrations', 'failed_jobs', 'personal_access_tokens']:
-                    continue
-                
-                # 2. Lấy câu lệnh CREATE TABLE thực tế
-                cursor.execute(f"SHOW CREATE TABLE {table_name}")
-                result = cursor.fetchone()
-                ddl = result['Create Table']
-                
-                # Tối ưu DDL: Xóa bớt các phần thừa như AUTO_INCREMENT để LLM đỡ rối
-                import re
-                ddl = re.sub(r'AUTO_INCREMENT=\d+\s+', '', ddl)
-                
-                tables_ddl.append(ddl)
-                print(f"📌 Đã quét xong bảng: {table_name}")
-                
-    finally:
-        connection.close()
-    return tables_ddl
+# 1. Khởi tạo kết nối với VannaCloud
+vn = VannaDefault(model='chatbot_vanna', api_key='ed2715408f2a4de28eac1999d8c7221c')
 
-def run_retrain():
-    # 1. Khởi tạo Vanna
-    vn = MyVanna()
-    
-    print("🧹 Đang tiến hành reset dữ liệu cũ...")
-    # Xóa sạch dữ liệu cũ trong Vector Store (ChromaDB)
-    # Cách nhanh nhất là bạn xóa tay thư mục VECTOR_DIR trước khi chạy script này
-    
-    # 2. Quét DDL từ Database thực tế
-    all_ddl = get_all_table_ddl()
-    
-    print(f"🚀 Bắt đầu train {len(all_ddl)} bảng vào Vector Store...")
-    for ddl in all_ddl:
-        vn.train(ddl=ddl)
-    
-    # 3. Train thêm câu hỏi mẫu (Q&A) - Đây là phần giúp LLM chọn đúng cột
-    # Bạn nên liệt kê các câu hỏi phổ biến và SQL chuẩn (chỉ lấy cột cần thiết)
-    print("📝 Training câu hỏi mẫu chuẩn...")
-    qa_samples = [
-{
+# 2. Danh sách 25 cặp Q&A (Rút gọn để bạn dễ hình dung, hãy copy đầy đủ 25 câu vào đây)
+training_data = [
+    {
         "question": "Doanh thu của cửa hàng theo từng tháng trong năm nay?",
         "sql": "SELECT MONTH(order_date) AS month, SUM(total_amount) AS revenue FROM orders WHERE YEAR(order_date) = YEAR(CURRENT_DATE()) GROUP BY month ORDER BY month;"
     },
@@ -263,12 +206,42 @@ def run_retrain():
         WHERE MONTH(order_date) = MONTH(CURRENT_DATE()) AND YEAR(order_date) = YEAR(CURRENT_DATE());
         """
     }
-    ]
-    
-    for item in qa_samples:
-        vn.train(question=item['question'], sql=item['sql'])
+]
 
-    print("✨ Hoàn tất! Hệ thống đã được train lại với dữ liệu chuẩn.")
+def train_database_structure(file_path):
+    """Đọc file .sql và nạp cấu trúc DDL vào Vanna"""
+    if not os.path.exists(file_path):
+        print(f"❌ Không tìm thấy file: {file_path}")
+        return
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            sql_content = f.read()
+        
+        # Tách các câu lệnh CREATE TABLE để nạp riêng biệt hoặc nạp cả khối
+        # VannaCloud khuyến khích nạp DDL để hiểu schema
+        vn.train(ddl=sql_content)
+        print(f"✅ Đã nạp thành công cấu trúc DDL từ file {file_path}")
+    except Exception as e:
+        print(f"❌ Lỗi khi nạp DDL: {str(e)}")
+
+def train_qa_pairs():
+    """Nạp các cặp câu hỏi và câu lệnh SQL mẫu"""
+    print(f"Bắt đầu nạp {len(training_data)} câu hỏi mẫu...")
+    success_count = 0
+    for i, item in enumerate(training_data):
+        try:
+            vn.train(question=item['question'], sql=item['sql'])
+            success_count += 1
+        except Exception as e:
+            print(f"❌ Lỗi ở câu '{item['question']}': {str(e)}")
+    print(f"✅ Đã nạp thành công {success_count}/{len(training_data)} câu hỏi mẫu.")
 
 if __name__ == "__main__":
-    run_retrain()
+    # Bước 1: Nạp cấu trúc bảng (Chỉ cần chạy 1 lần duy nhất hoặc khi bạn thay đổi DB)
+    train_database_structure('backend/app/init_tables.sql')
+    
+    # Bước 2: Nạp dữ liệu câu hỏi mẫu
+    train_qa_pairs()
+    
+    print("\n--- HOÀN TẤT QUÁ TRÌNH HUẤN LUYỆN ---")

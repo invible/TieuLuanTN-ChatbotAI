@@ -1,10 +1,3 @@
--- Nên chọn database trước
--- USE your_database_name;
-
--- Đảm bảo dùng InnoDB + utf8mb4
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
-
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(40) NOT NULL UNIQUE,
@@ -158,5 +151,3 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     CONSTRAINT fk_chat_messages_session
         FOREIGN KEY (session_id) REFERENCES chat_sessions(id)
 );
-
-SET FOREIGN_KEY_CHECKS = 1;

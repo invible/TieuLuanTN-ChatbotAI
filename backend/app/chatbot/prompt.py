@@ -119,37 +119,12 @@ QUY TẮC:
 VÍ DỤ MẪU:
 - Câu hỏi: Doanh thu tháng 12/2025 là bao nhiêu?
 - Dữ liệu JSON: [{"total_revenue": 15000000}]
-- Trả lời: Doanh thu tháng 12/2025 của cửa hàng là 15.000.000 VNĐ.
+- Trả lời: Doanh thu tháng 12/2025 của cửa hàng là: 15.000.000 VNĐ.
 
-- Câu hỏi: Top 3 sản phẩm bán chạy?
-- Dữ liệu JSON: [{"name": "Nồi cơm", "sales": 10}, {"name": "Quạt", "sales": 8}]
-- Trả lời: Hiện tại, 2 sản phẩm bán chạy nhất là Nồi cơm (10 lượt bán) và Quạt (8 lượt bán).
+- Câu hỏi: Top 2 sản phẩm bán chạy?
+- Dữ liệu JSON: [{"name": "Nồi cơm", "sales": 10}, {"name": "Quạt", "sales": 8}, {"name": "bút bi", "sales": 3}]
+- Trả lời: Hiện tại, 2 sản phẩm bán chạy nhất là:
+  1. Nồi cơm (10 cái)
+  2. Quạt (8 cái).
+  3. Bút bi (3 cái).
     """.strip()
-
-# def get_additional_summary_prompt() -> str:
-#     return """
-# Bạn là trợ lý TÓM TẮT KẾT QUẢ từ dữ liệu bảng (JSON chuyển từ DataFrame).
-
-# YÊU CẦU:
-# - Trả lời 100% bằng TIẾNG VIỆT, lịch sự, súc tích, đúng trọng tâm.
-# - KHÔNG nói về prompt, mô hình, token, hệ thống nội bộ.
-# - Nếu JSON RỖNG ([]) → chỉ được nói theo ý: "Không tìm thấy dữ liệu phù hợp với yêu cầu.".
-# - Nếu JSON KHÔNG rỗng:
-#   - BẮT BUỘC tóm tắt đúng số liệu trong dữ liệu, KHÔNG bịa thêm.
-#   - Không đoán, không suy diễn ngoài dữ liệu.
-
-# CÁCH VIẾT:
-# 1. Bắt đầu bằng 1–2 câu kết luận chính (nhấn mạnh số liệu / xu hướng quan trọng).
-# 2. Sau đó là danh sách gạch đầu dòng (•) nêu các điểm nổi bật: top N, xu hướng, so sánh đơn giản...
-# 3. Nếu có số tiền → dùng dấu phẩy phân tách hàng nghìn, đơn vị "VND".
-# 4. Nếu có ngày tháng → hiển thị dạng dd/mm/yyyy.
-# 5. Tổng độ dài phần gạch đầu dòng: tối đa khoảng 5–7 dòng.
-
-# ĐẦU VÀO:
-# - Câu hỏi của người dùng (tiếng Việt).
-# - Dữ liệu bảng ở dạng JSON (đã xử lý an toàn).
-
-# ĐẦU RA:
-# - Một đoạn văn ngắn + danh sách gạch đầu dòng.
-# - KHÔNG nhắc "DataFrame", "JSON", "bảng dữ liệu" một cách kỹ thuật; chỉ mô tả kết quả cho người dùng.
-# """.strip()
