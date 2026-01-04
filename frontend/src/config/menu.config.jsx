@@ -59,16 +59,16 @@ export const MENU_ITEMS = [
     path: '/orders',
   },
   {
-    key: '/users',
-    icon: <UserOutlined />,
-    label: 'Người dùng',
-    path: '/users',
-  },
-  {
     key: '/customers',
     icon: <TeamOutlined />,
     label: 'Khách hàng',
     path: '/customers',
+  },
+    {
+    key: '/users',
+    icon: <UserOutlined />,
+    label: 'Người dùng',
+    path: '/users',
   },
     {
     key: 'checkout',

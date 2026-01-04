@@ -1,4 +1,3 @@
-// src/pages/LoginPage.jsx
 import { Form, Input, Button, Checkbox, App } from "antd";
 import {
   MailOutlined,
@@ -11,6 +10,8 @@ import { login, logout, isLoggedIn } from "../services/authService";
 import api from "../services/http";
 
 import '../styles/login.css';
+
+import logo from "../assets/logo.png";
 
 const LoginPage = () => {
   const [form] = Form.useForm();
@@ -44,15 +45,15 @@ const handleFinish = async (values) => {
       <div className="auth-card">
         {/* Logo + brand */}
         <div className="auth-logo">
-          <div className="auth-logo-icon">
-            {/* icon đơn giản */}
-            <i className="fa fa-layer-group" />
-          </div>
-          <div className="auth-logo-title">Hoàng Yến Shop</div>
+            <img
+              src={logo}
+              alt="Hoàng Yến Shop"
+              className="auth-logo-img"
+            />
+          <div className="auth-logo-title">Admin Dashboard</div>
         </div>
 
         {/* Title */}
-        <div className="auth-title">Admin Dashboard</div>
         <div className="auth-subtitle">
           Vui lòng đăng nhập để tiếp tục
         </div>

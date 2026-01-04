@@ -134,6 +134,7 @@ export default function CheckoutPage() {
   /* ====================== CALCULATIONS ====================== */
   const subtotal = useMemo(() => items.reduce((sum, i) => sum + i.unitPrice * i.qty, 0), [items]);
   const vat = useMemo(() => subtotal * 0.1, [subtotal]); // VAT 10%
+  const discount = vat; // giảm giá
   const grandTotal = useMemo(() => subtotal + vat, [subtotal, vat]);
 
   const formatMoney = (value) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value || 0);
@@ -345,6 +346,10 @@ export default function CheckoutPage() {
           <div className="price-row">
             <Text>VAT (10%):</Text>
             <Text strong>{formatMoney(vat)}</Text>
+          </div>
+          <div className="price-row">
+            <Text>Giảm giá:</Text>
+            <Text strong>- {formatMoney(discount)}</Text>
           </div>
           
           <div className="total-box">

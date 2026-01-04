@@ -329,11 +329,11 @@ const OrdersPage = () => {
       sorter: (a, b) => a.user_id - b.user_id,
     },
     {
-      title: "Tổng tiền (VND)",
+      title: "Tổng tiền",
       dataIndex: "total_amount",
       key: "total_amount",
       align: "right",
-      render: (value) => `${Number(value).toLocaleString()}`,
+      render: (value) => `${Number(value).toLocaleString('vi-VN')} đ`,
     },
     {
       title: "Thanh toán",

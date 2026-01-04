@@ -13,7 +13,8 @@ def list_customers(db: Session = Depends(get_db)):
     rows = (
         db.query(
             models.Customer,
-            func.count(models.Order.id).label("order_count")
+            func.count(models.Order.id).label("order_count"), # <--- Tính tổng đơn
+            func.sum(models.Order.total_amount).label("total_spent") # <--- Tính tổng chi tiêu
         )
         .outerjoin(models.Order, models.Order.customer_id == models.Customer.id)
         .group_by(models.Customer.id)
@@ -21,7 +22,7 @@ def list_customers(db: Session = Depends(get_db)):
     )
 
     result = []
-    for customer, order_count in rows:
+    for customer, order_count, total_spent in rows:
         result.append({
             "id": customer.id,
             "name": customer.name,
@@ -30,6 +31,7 @@ def list_customers(db: Session = Depends(get_db)):
             "address": customer.address,
             "phone": customer.phone,
             "order_count": int(order_count or 0),
+            "total_spent": float(total_spent or 0),
         })
 
     return result

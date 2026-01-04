@@ -27,6 +27,12 @@
     margin-bottom: 24px;
 }
 
+.auth-logo-img {
+    width: 200px;
+    height: auto;
+    margin-bottom: 8px;
+}
+
 .auth-logo-icon {
     width: 64px;
     height: 64px;
@@ -41,9 +47,11 @@
 }
 
 .auth-logo-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1f2933;
+    font-size: 20px;
+    font-weight: 600;
+    color: #2f80ed;
+    /* đỏ cam hợp shop bách hóa */
+    text-align: center;
 }
 
 .auth-title {

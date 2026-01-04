@@ -155,7 +155,7 @@ def get_dashboard_overview(current_user=Depends(get_current_user),db: Session = 
         .join(models.OrderItem, models.Product.id == models.OrderItem.product_id)
         .group_by(models.Product.id)
         .order_by(func.sum(models.OrderItem.quantity).desc())
-        .limit(5)
+        .limit(7)
         .all()
     )
 

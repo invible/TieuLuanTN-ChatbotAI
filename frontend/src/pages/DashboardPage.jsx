@@ -270,13 +270,13 @@ const productColumns = [
       <Row gutter={[16, 16]} className="stats-row">
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card className="stat-card stat-card-green">
-            <Statistic title="DOANH THU" value={stats?.revenue?.toLocaleString('vi-VN')} suffix="VNĐ" />
+            <Statistic title="TỔNG DOANH THU" value={stats?.revenue?.toLocaleString('vi-VN')} suffix="VNĐ" />
           </Card>
         </Col>
 
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card className="stat-card stat-card-purple">
-            <Statistic title="ĐƠN HÀNG" value={stats?.sales?.toLocaleString('vi-VN')} />
+            <Statistic title="TỔNG ĐƠN HÀNG" value={stats?.sales?.toLocaleString('vi-VN')} />
           </Card>
         </Col>
 
@@ -288,7 +288,7 @@ const productColumns = [
 
         <Col xs={24} sm={12} md={12} lg={6}>
           <Card className="stat-card stat-card-blue">
-            <Statistic title="KHÁCH HÀNG" value={stats.customers} precision={0} />
+            <Statistic title="TỔNG KHÁCH HÀNG" value={stats.customers} precision={0} />
           </Card>
         </Col>
       </Row>

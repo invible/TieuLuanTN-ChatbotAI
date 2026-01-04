@@ -141,6 +141,7 @@ const CustomersPage = () => {
       title: "Giới tính",
       dataIndex: "gender",
       key: "gender",
+      width: 80,
     },
     {
       title: "Ngày sinh",
@@ -161,13 +162,24 @@ const CustomersPage = () => {
       ellipsis: true,
     },
     {
-      title: "Tổng đơn",
+      title: "Tổng đơn mua",
       dataIndex: "order_count",
       key: "order_count",
       width: 100,
       align: "right",
       render: (value) => <strong>{value ?? 0}</strong>,
       sorter: (a, b) => (a.order_count ?? 0) - (b.order_count ?? 0),
+    },
+    {
+    title: "Tổng chi tiêu",
+    dataIndex: "total_spent",
+    key: "total_spent",
+    sorter: (a, b) => a.total_spent - b.total_spent, // Cho phép sắp xếp theo số tiền
+    render: (value) => (
+      <span >
+        {value.toLocaleString('vi-VN')} đ
+      </span>
+    ),
     },
     {
       title: "Thao tác",

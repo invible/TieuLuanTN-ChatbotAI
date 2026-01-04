@@ -114,8 +114,8 @@ const App = () => {
               style={{ background: '#1f2533' }}
             >
               <div className="logo">
-                <div className="logo-icon">E</div>
-                {!collapsed && <span className="logo-text">HY-ShopAdmin</span>}
+                <div className="logo-icon">HY</div>
+                {!collapsed && <span className="logo-text">Shop Admin</span>}
               </div>
 
               <Menu
@@ -139,7 +139,7 @@ const App = () => {
             >
               {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             </span>
-            <span className="header-title">Quản trị bán hàng - Hoàng Yến Shop</span>
+            <span className="header-title">Quản trị bán hàng - Bách hóa Hoàng Yến</span>
           </div>
 
           <div className="header-right">

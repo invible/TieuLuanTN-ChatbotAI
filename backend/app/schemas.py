@@ -45,20 +45,6 @@ class UserOut(UserBase):
 # ======================
 #  LOGINS
 # ======================
-# class LoginBase(BaseModel):
-#     email: EmailStr
-#     password: str
-
-# class LoginResponse(BaseModel):
-#     id: int
-#     username: str
-#     email: EmailStr
-#     role: str
-#     access_token: str | None = None   # nếu sau này dùng JWT
-#     token_type: str = "bearer"
-
-# class LoginRequest(LoginBase):
-#     pass
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -71,7 +57,7 @@ class LoginRequest(BaseModel):
 class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None
-    unit: Optional[str] = None
+    unit: str
     packaging: Optional[str] = None
     image_url: Optional[str] = None
     selling_price: float  # giá bán do người quản trị nhập
@@ -83,11 +69,8 @@ class ProductCreate(ProductBase):
     stock: int = 0
 
 
-class ProductUpdate(BaseModel):
-    name: Optional[str] = None
-    selling_price: Optional[float] = None
-    category_id: Optional[int] = None
-    brand_id: Optional[int] = None
+class ProductUpdate(ProductBase):
+    pass
 
 class ProductOut(ProductBase):
     id: int
@@ -226,7 +209,8 @@ class CustomerUpdate(BaseModel):
 
 class CustomerOut(CustomerBase):
     id: int
-    order_count: int = 0
+    order_count: Optional[int] = 0
+    total_spent: Optional[float] = 0.0
 
     class Config:
         orm_mode = True

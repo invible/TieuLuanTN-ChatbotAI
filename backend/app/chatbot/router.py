@@ -85,7 +85,7 @@ async def ask_question(
             detail=f"Lỗi hệ thống: {str(e)}"
         )
 
-
+# Đang train thủ công cho VannaCloud
 # @router.post("/admin/retrain")
 # def admin_retrain():
 #     """

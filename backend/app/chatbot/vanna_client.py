@@ -12,10 +12,10 @@ from .config import (
     OLLAMA_API_KEY,
     OLLAMA_MODEL,
     VECTOR_DIR,
-    DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 )
 
 from .prompt import get_additional_sql_prompt
+from .db import get_mysql_connection
 
 class MyVanna(ChromaDB_VectorStore, Ollama):
     """
@@ -53,21 +53,10 @@ class MyVanna(ChromaDB_VectorStore, Ollama):
         """
         return self._additional_sql_prompt
 
-    def get_mysql_connection(self):
-        return pymysql.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            database=DB_NAME,
-            charset="utf8mb4",
-            cursorclass=pymysql.cursors.DictCursor,
-        )
-
     # --------------------- HELPER CHO SCHEMA --------------------- #
     def get_schema_ddl(self, tables: List[str]) -> str:
         ddl_parts = []
-        with self.get_mysql_connection() as conn:
+        with get_mysql_connection() as conn:
             with conn.cursor() as cur:
                 for t in tables:
                     try:

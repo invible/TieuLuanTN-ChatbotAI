@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from app.utils.auth import get_password_hash
 
 from app.db import get_db
 from app import models, schemas
@@ -23,7 +24,9 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=schemas.UserOut)
 def create_user(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
-    # TODO: sau này bạn có thể hash password tại đây thay vì nhận sẵn password_hash
+    # Hash password để lưu vào database
+    password_hash = get_password_hash(user_in.password)
+
     user = models.User(
         username=user_in.username,
         date_of_birth=user_in.date_of_birth,
@@ -31,7 +34,7 @@ def create_user(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
         address=user_in.address,
         phone=user_in.phone,
         email=user_in.email,
-        password=user_in.password, #hash_password(user_in.password),
+        password=password_hash,
         role=user_in.role,
         status=user_in.status or "active",
     )
